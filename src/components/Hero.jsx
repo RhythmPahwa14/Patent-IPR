@@ -33,7 +33,7 @@ export default function Hero() {
 
           <div className="flex flex-wrap items-center gap-4 mb-8">
             <Link
-              href="#contact"
+              href="signup"
               className="inline-flex items-center gap-2 border-2 border-[#0d1b2a] text-[#0d1b2a] font-semibold px-6 py-3 rounded-md hover:bg-[#0d1b2a] hover:text-white transition-all"
             >
               Get Started
