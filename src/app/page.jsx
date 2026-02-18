@@ -16,7 +16,7 @@ export default function Home() {
       <Services />
       <Methodology />
       <Platform />
-      <WhyTrust />
+      {/* <WhyTrust /> */}
       <FAQ />
       <CTAContact />
       <Footer />

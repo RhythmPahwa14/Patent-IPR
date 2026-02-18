@@ -66,7 +66,7 @@ export default function WhyTrust() {
           </div>
         </div>
 
-        {/* Right: Industries card */}
+        {/* Right: Industries card
         <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
           <h3 className="font-bold text-white text-lg mb-6">Industries We Empower</h3>
           <div className="grid grid-cols-2 gap-4 mb-8">
@@ -79,7 +79,7 @@ export default function WhyTrust() {
                 <span className="text-white text-sm font-semibold">{ind.label}</span>
               </div>
             ))}
-          </div>
+          </div> */}
 
           {/* Testimonial */}
           <div className="border-t border-white/10 pt-6">
@@ -91,7 +91,6 @@ export default function WhyTrust() {
             </div>
           </div>
         </div>
-      </div>
     </section>
   );
 }

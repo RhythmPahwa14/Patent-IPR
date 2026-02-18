@@ -31,12 +31,12 @@ export default function Navbar() {
 
         {/* CTA Buttons */}
         <div className="hidden lg:flex items-center gap-3">
-          <button className="text-sm font-medium text-[#0d1b2a] px-4 py-2 hover:text-[#f5a623] transition-colors">
+          <Link href="/login" className="text-sm font-medium text-[#0d1b2a] px-4 py-2 hover:text-[#f5a623] transition-colors">
             Log In
-          </button>
-          <button className="bg-[#0d1b2a] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#1a2f4a] transition-colors">
+          </Link>
+          <Link href="/signup" className="bg-[#0d1b2a] text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-[#1a2f4a] transition-colors">
             Get Started
-          </button>
+          </Link>
         </div>
 
         {/* Mobile hamburger */}
