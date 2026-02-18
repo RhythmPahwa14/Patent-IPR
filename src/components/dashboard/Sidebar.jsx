@@ -16,7 +16,7 @@ const adminNav = [
   { label: "Profile", icon: "person", href: "/dashboard/profile" },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }) {
   const pathname = usePathname();
 
   const NavItem = ({ item }) => {
@@ -24,6 +24,7 @@ export default function Sidebar() {
     return (
       <Link
         href={item.href}
+        onClick={onClose}
         className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
           active
             ? "bg-white/10 text-white"
@@ -37,11 +38,11 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-48 min-h-screen bg-[#0d1b2a] flex flex-col shrink-0">
+    <aside className="w-52 h-screen bg-[#0d1b2a] flex flex-col shrink-0 overflow-y-auto">
       {/* Logo */}
-      <div className="px-4 py-5 border-b border-white/10">
+      <div className="px-4 py-5 border-b border-white/10 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#f5a623] rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-[#f5a623] rounded-lg flex items-center justify-center shrink-0">
             <span className="material-symbols-outlined text-[#0d1b2a] text-base">verified_user</span>
           </div>
           <div className="leading-tight">
@@ -49,6 +50,14 @@ export default function Sidebar() {
             <p className="text-white/40 text-[9px] tracking-wider uppercase">Client Portal</p>
           </div>
         </div>
+        {/* Close button — mobile only */}
+        <button
+          onClick={onClose}
+          className="lg:hidden text-white/40 hover:text-white transition-colors ml-2"
+          aria-label="Close menu"
+        >
+          <span className="material-symbols-outlined text-xl">close</span>
+        </button>
       </div>
 
       {/* Main Nav */}
@@ -68,6 +77,7 @@ export default function Sidebar() {
       <div className="mt-auto p-3">
         <Link
           href="/dashboard/cases/new"
+          onClick={onClose}
           className="flex items-center justify-center gap-2 w-full bg-[#f5a623] text-[#0d1b2a] text-xs font-bold py-2.5 rounded-lg hover:bg-[#e09610] transition-colors"
         >
           <span className="material-symbols-outlined text-base">add_circle</span>
