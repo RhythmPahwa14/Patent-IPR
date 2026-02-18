@@ -13,7 +13,7 @@ export default function Hero() {
           <div className="inline-flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full px-4 py-1.5 mb-4">
             <span className="w-2 h-2 rounded-full bg-[#c5a059] animate-pulse" />
             <span className="text-xs font-semibold uppercase tracking-widest text-[#0d1b2a]">
-              Now Monitoring 700+ Assets
+              Now Monitoring 70+ Assets
             </span>
           </div>
 
