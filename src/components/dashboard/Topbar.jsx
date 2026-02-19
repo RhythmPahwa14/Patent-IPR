@@ -5,13 +5,43 @@ import { useRouter } from "next/navigation";
 
 export default function DashboardTopbar({ title, searchPlaceholder = "Search case numbers, titles, or inventors...", onMenuOpen }) {
   const router = useRouter();
-  const [user, setUser] = useState({ name: "Alexander Sterling", role: "Global IP Director" });
+  const [user, setUser] = useState({ name: "Sandeep Vashishtha", role: "Individual" });
+
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("user");
-      if (stored) setUser(JSON.parse(stored));
-    } catch {}
+    const fetchUser = async () => {
+      try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        if (!token) return;
+
+        const response = await fetch(
+          "https://patent-ipr-backend-springboot-dug6aphbfrfuadh3.southindia-01.azurewebsites.net/api/auth/me",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+          }
+        );
+
+        if (response.status === 401) {
+          localStorage.removeItem("token");
+          router.push("/login");
+          return;
+        }
+
+        if (response.ok) {
+          const data = await response.json();
+          setUser({
+            name: `${data.name} ${data.lastName}`,
+            role: " ",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch user:", error);
+      }
+    };
+    fetchUser();
   }, []);
 
   return (

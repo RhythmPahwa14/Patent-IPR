@@ -1,240 +1,344 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-const serviceCategories = ["Patent Application (Non-Provisional)", "Patent Application (Provisional)", "Trademark Registration", "Design Patent", "PCT International Filing", "Patent Renewal"];
-const entityTypes = ["Small Entity (SME/Individual)", "Large Entity (Corporation)", "Micro Entity (Academic/Non-Profit)"];
-const jurisdictions = [
-  { label: "United States (USPTO)", flag: "🇺🇸" },
-  { label: "European Patent Office (EPO)", flag: "🇪🇺" },
-  { label: "China (CNIPA)", flag: "🇨🇳" },
-  { label: "India (IPO)", flag: "🇮🇳" },
-  { label: "Japan (JPO)", flag: "🇯🇵" },
-  { label: "United Kingdom (UKIPO)", flag: "🇬🇧" },
-];
-
-function calcEstimate({ service, entity, claims, totalClaims, pages, accelerated, drawings }) {
-  // Gov fees
-  let basicFiling = entity === "Large Entity (Corporation)" ? 800 : 320;
-  let searchFee = entity === "Large Entity (Corporation)" ? 660 : 330;
-  let examFee = entity === "Large Entity (Corporation)" ? 800 : 400;
-  const govTotal = basicFiling + searchFee + examFee;
-
-  // Professional fees
-  let drafting = 3500;
-  let formalities = 850;
-  let illustration = drawings ? 500 : 0;
-  let expedite = accelerated ? 1200 : 0;
-  const proTotal = drafting + formalities + illustration + expedite;
-
-  return {
-    govTotal,
-    basicFiling,
-    searchFee,
-    examFee,
-    proTotal,
-    drafting,
-    formalities,
-    illustration,
-    expedite,
-    total: govTotal + proTotal,
-  };
+/* ─── Reusable Toggle switch ─── */
+function Toggle({ checked, onChange }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors duration-200 focus:outline-none ${
+        checked ? "bg-blue-500" : "bg-gray-200"
+      }`}
+    >
+      <span
+        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 mt-0.5 ${
+          checked ? "translate-x-5" : "translate-x-0.5"
+        }`}
+      />
+    </button>
+  );
 }
 
-export default function CostEstimatorPage() {
-  const [form, setForm] = useState({
-    service: serviceCategories[0],
-    entity: entityTypes[0],
-    jurisdiction: jurisdictions[0].label,
-    claims: "3",
-    totalClaims: "20",
-    pages: "25",
-    accelerated: false,
-    drawings: true,
-  });
-  const [estimate, setEstimate] = useState(null);
-
-  const handle = (key, val) => setForm((f) => ({ ...f, [key]: val }));
-
-  const calculate = () => {
-    setEstimate(calcEstimate(form));
-  };
-
-  const quoteId = `#EST-${Math.floor(900000 + Math.random() * 99999)}-${new Date().getFullYear().toString().slice(-2)}`;
-
+/* ─── Row helpers ─── */
+function FeeRow({ icon, label, sub, amount, muted }) {
   return (
-    <div className="max-w-5xl mx-auto space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-[#0d1b2a]">IP Cost Estimator</h1>
-        <p className="text-sm text-gray-500 mt-1 max-w-2xl">
-          Plan your intellectual property budget with precision. Get real-time estimates for international filings, renewals, and professional fees based on current global regulations.
-        </p>
+    <div className={`flex items-center gap-3 py-3 border-b border-gray-50 last:border-0 ${muted ? "opacity-50" : ""}`}>
+      {icon && (
+        <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center shrink-0">
+          <span className="material-symbols-outlined text-gray-500 text-base">{icon}</span>
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <p className={`text-sm font-medium ${muted ? "text-gray-400 italic" : "text-[#0d1b2a]"}`}>{label}</p>
+        {sub && <p className="text-[11px] text-gray-400">{sub}</p>}
       </div>
+      {amount && <span className={`text-sm font-bold shrink-0 ${muted ? "text-gray-400" : "text-[#0d1b2a]"}`}>{amount}</span>}
+    </div>
+  );
+}
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-        {/* Form */}
-        <div className="lg:col-span-3 bg-white rounded-xl border border-gray-100 p-6 space-y-5">
-          <h2 className="text-base font-bold text-[#0d1b2a] flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#f5a623] text-xl">tune</span>
-            Application Details
-          </h2>
+function ToggleRow({ label, sub, checked, onChange }) {
+  return (
+    <div className="flex items-center gap-3 py-3 border-b border-gray-50 last:border-0">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-[#0d1b2a]">{label}</p>
+        {sub && <p className="text-[11px] text-gray-400">{sub}</p>}
+      </div>
+      <Toggle checked={checked} onChange={onChange} />
+    </div>
+  );
+}
 
-          {/* Service + Entity */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-semibold text-[#0d1b2a] block mb-1.5">Service Category</label>
-              <select value={form.service} onChange={(e) => handle("service", e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0d1b2a] outline-none focus:border-[#0d1b2a] bg-white">
-                {serviceCategories.map((s) => <option key={s}>{s}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-[#0d1b2a] block mb-1.5">Entity Type</label>
-              <select value={form.entity} onChange={(e) => handle("entity", e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0d1b2a] outline-none focus:border-[#0d1b2a] bg-white">
-                {entityTypes.map((e) => <option key={e}>{e}</option>)}
-              </select>
-            </div>
-          </div>
+function SectionLabel({ children }) {
+  return (
+    <p className="text-[11px] font-bold tracking-widest text-gray-400 uppercase mt-5 mb-1">{children}</p>
+  );
+}
 
-          {/* Jurisdiction */}
+function InfoBanner({ children }) {
+  return (
+    <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-xl p-3">
+      <span className="material-symbols-outlined text-blue-500 text-base mt-0.5 shrink-0">info</span>
+      <p className="text-xs text-blue-700 leading-relaxed font-medium">{children}</p>
+    </div>
+  );
+}
+
+/* ─── Shared estimator shell ─── */
+function EstimatorShell({ title, onBack, children, total, totalNote, onStartFiling }) {
+  return (
+    <div className="max-w-md mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
+        <button onClick={onBack} className="text-[#0d1b2a] hover:text-gray-400 transition-colors">
+          <span className="material-symbols-outlined text-xl">arrow_back_ios</span>
+        </button>
+        <h2 className="text-base font-bold text-[#0d1b2a] flex-1">{title}</h2>
+      </div>
+      <div className="px-5 pb-4">{children}</div>
+      <div className="border-t border-gray-100 px-5 pt-4 pb-5 bg-white">
+        <div className="flex items-end justify-between mb-3">
           <div>
-            <label className="text-xs font-semibold text-[#0d1b2a] block mb-1.5">Primary Jurisdiction</label>
-            <select value={form.jurisdiction} onChange={(e) => handle("jurisdiction", e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0d1b2a] outline-none focus:border-[#0d1b2a] bg-white">
-              {jurisdictions.map((j) => <option key={j.label}>{j.flag} {j.label}</option>)}
-            </select>
+            <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">Total Estimated Cost</p>
+            <p className="text-3xl font-bold text-[#0d1b2a]">{total}</p>
+            {totalNote && <p className="text-[10px] text-gray-400 mt-0.5">{totalNote}</p>}
           </div>
-
-          {/* Claims + Pages */}
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { label: "Independent Claims", key: "claims" },
-              { label: "Total Claims", key: "totalClaims" },
-              { label: "Pages", key: "pages" },
-            ].map(({ label, key }) => (
-              <div key={key}>
-                <label className="text-xs font-semibold text-[#0d1b2a] block mb-1.5">{label}</label>
-                <input
-                  type="number"
-                  value={form[key]}
-                  onChange={(e) => handle(key, e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-[#0d1b2a] outline-none focus:border-[#0d1b2a]"
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Checkboxes */}
-          <div className="space-y-2.5">
-            {[
-              { key: "accelerated", label: "Request Accelerated Examination", sub: "(Prioritized Examination Track 1)" },
-              { key: "drawings", label: "Professional formal drawings required", sub: "(estimated 4 sheets)" },
-            ].map(({ key, label, sub }) => (
-              <label key={key} className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" checked={form[key]} onChange={(e) => handle(key, e.target.checked)} className="w-4 h-4 accent-[#0d1b2a]" />
-                <span className="text-sm text-[#0d1b2a]">{label} <span className="text-gray-400">{sub}</span></span>
-              </label>
-            ))}
-          </div>
-
-          {/* Calculate */}
-          <button
-            onClick={calculate}
-            className="w-full bg-[#0d1b2a] text-white py-3.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#1a2f4a] transition-colors"
-          >
-            <span className="material-symbols-outlined text-base">calculate</span>
-            Calculate Estimate
-          </button>
-
-          {/* Info */}
-          <div className="flex items-start gap-2.5 bg-blue-50 border border-blue-100 rounded-lg p-3">
-            <span className="material-symbols-outlined text-blue-500 text-base mt-0.5">info</span>
-            <p className="text-xs text-blue-700 leading-relaxed">
-              Professional fees include drafting, filing, and communication for standard cases. More complex inventions or excessive office actions may incur additional hourly charges. Estimates exclude taxes where applicable.
-            </p>
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+            <span className="material-symbols-outlined text-blue-500 text-xl">receipt_long</span>
           </div>
         </div>
+        <button
+          onClick={onStartFiling}
+          className="w-full bg-blue-600 text-white py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors"
+        >
+          <span className="material-symbols-outlined text-base">rocket_launch</span>
+          Start Filing
+        </button>
+      </div>
+    </div>
+  );
+}
 
-        {/* Estimate Summary */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="bg-[#0d1b2a] rounded-xl p-6 text-white">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="material-symbols-outlined text-[#f5a623] text-xl">receipt_long</span>
-              <h2 className="text-base font-bold">Estimate Summary</h2>
-            </div>
-            <p className="text-[10px] text-white/40 mb-5">QUOTE ID: {quoteId}</p>
-
-            {estimate ? (
-              <>
-                {/* Gov fees */}
-                <div className="mb-4">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm font-semibold">Official Government Fees</span>
-                    <span className="text-sm font-bold">${estimate.govTotal.toFixed(2)}</span>
-                  </div>
-                  {[
-                    ["Basic Filing (Small Entity)", estimate.basicFiling],
-                    ["Search Fee", estimate.searchFee],
-                    ["Examination Fee", estimate.examFee],
-                  ].map(([label, val]) => (
-                    <div key={label} className="flex justify-between text-xs text-white/50 mb-1">
-                      <span>{label}</span><span>${val.toFixed(2)}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Pro fees */}
-                <div className="mb-5">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-sm font-semibold">Professional Service Fees</span>
-                    <span className="text-sm font-bold">${estimate.proTotal.toFixed(2)}</span>
-                  </div>
-                  {[
-                    ["Application Drafting (Standard)", estimate.drafting],
-                    ["Filing Formalities & Review", estimate.formalities],
-                    estimate.illustration > 0 && ["Formal Illustration Services", estimate.illustration],
-                    estimate.expedite > 0 && ["Accelerated Examination Fee", estimate.expedite],
-                  ].filter(Boolean).map(([label, val]) => (
-                    <div key={label} className="flex justify-between text-xs text-white/50 mb-1">
-                      <span>{label}</span><span>${val.toFixed(2)}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="border-t border-white/10 pt-4 text-center">
-                  <p className="text-[10px] tracking-widest uppercase text-white/40 mb-1">Total Estimated Cost</p>
-                  <p className="text-4xl font-bold text-[#f5a623]">${estimate.total.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
-                  <p className="text-[10px] text-white/30 mt-2 leading-relaxed">
-                    Disclaimer: This is a preliminary estimate and does not constitute a formal agreement. Final pricing depends on specific technical complexities and legal requirements.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 mt-4">
-                  <button className="flex items-center justify-center gap-1.5 border border-white/20 text-white text-xs font-semibold py-2.5 rounded-lg hover:bg-white/5 transition-colors">
-                    <span className="material-symbols-outlined text-sm">download</span> PDF
-                  </button>
-                  <button className="flex items-center justify-center gap-1.5 border border-white/20 text-white text-xs font-semibold py-2.5 rounded-lg hover:bg-white/5 transition-colors">
-                    <span className="material-symbols-outlined text-sm">bookmark</span> Save
-                  </button>
-                </div>
-                <button className="w-full mt-2 bg-[#f5a623] text-[#0d1b2a] text-sm font-bold py-3 rounded-lg hover:bg-[#e09610] transition-colors">
-                  Proceed with Filing
-                </button>
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <span className="material-symbols-outlined text-white/20 text-5xl">calculate</span>
-                <p className="text-sm text-white/40 mt-3">Fill in the details and click<br />"Calculate Estimate" to see results.</p>
-              </div>
-            )}
+/* ─── Patent Estimator ─── */
+function PatentEstimator({ onBack, onStartFiling }) {
+  const BASE = 6600 + 6000;
+  const OPT = { drafting: 8000, priorArt: 2000, earlyPub: 5000, expedited: 10000 };
+  const [opts, setOpts] = useState({ drafting: false, priorArt: false, earlyPub: false, expedited: false });
+  const toggle = (k) => setOpts((o) => ({ ...o, [k]: !o[k] }));
+  const total = BASE + Object.entries(opts).reduce((sum, [k, v]) => sum + (v ? OPT[k] : 0), 0);
+  return (
+    <EstimatorShell title="Patent Cost Estimator" onBack={onBack} total={`₹${total.toLocaleString("en-IN")}`} onStartFiling={onStartFiling}>
+      <div className="pt-4">
+        <InfoBanner>Applicable for Individuals / Startups / Small Entities</InfoBanner>
+        <SectionLabel>Fixed Statutory Fees</SectionLabel>
+        <FeeRow icon="description" label="Filing Fee" amount="₹6,600" />
+        <FeeRow icon="fact_check" label="Ordinary Examination" amount="₹6,000" />
+        <SectionLabel>Optional Services</SectionLabel>
+        <ToggleRow label="Patent Drafting" sub="₹8,000" checked={opts.drafting} onChange={() => toggle("drafting")} />
+        <ToggleRow label="Prior Art Search" sub="₹2,000" checked={opts.priorArt} onChange={() => toggle("priorArt")} />
+        <ToggleRow label="Early Publication" sub="₹5,000" checked={opts.earlyPub} onChange={() => toggle("earlyPub")} />
+        <ToggleRow label="Expedited Examination" sub="₹10,000" checked={opts.expedited} onChange={() => toggle("expedited")} />
+        <SectionLabel>Post-Filing Services</SectionLabel>
+        <div className="flex items-center gap-3 py-3">
+          <div className="flex-1">
+            <p className="text-sm font-medium text-[#0d1b2a]">FER Response</p>
+            <p className="text-[11px] text-gray-400">Estimated Range</p>
           </div>
-
-          {/* Office info */}
-          <div className="bg-white rounded-xl border border-gray-100 p-4">
-            <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-2">Office Information</p>
-            <p className="text-xs font-semibold text-[#0d1b2a]">United States Patent and Trademark Office</p>
-            <p className="text-xs text-gray-400 mt-1">600 Dulany St, Alexandria, VA 22314, USA</p>
-            <a href="https://www.uspto.gov" target="_blank" rel="noopener noreferrer" className="text-xs text-[#f5a623] hover:underline mt-1 block">www.uspto.gov</a>
+          <div className="text-right">
+            <p className="text-sm font-bold text-blue-600">₹5,000 – ₹10,000</p>
+            <p className="text-[10px] text-gray-400 uppercase tracking-wide">per response</p>
           </div>
         </div>
       </div>
+    </EstimatorShell>
+  );
+}
+
+/* ─── Design Registration Estimator ─── */
+function DesignEstimator({ onBack, onStartFiling }) {
+  const BASE = 5000 + 1000;
+  const DRAWINGS_ADD = 2500;
+  const [drawings, setDrawings] = useState(false);
+  const total = BASE + (drawings ? DRAWINGS_ADD : 0);
+  return (
+    <EstimatorShell title="Design Registration Estimator" onBack={onBack} total={`₹${total.toLocaleString("en-IN")}`} onStartFiling={onStartFiling}>
+      <div className="pt-4">
+        <InfoBanner>Applicable for Individuals / Startups / Small Entities</InfoBanner>
+        <SectionLabel>Entity Type</SectionLabel>
+        <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
+          <span className="text-sm text-[#0d1b2a]">Individual / Startup / Small Entity</span>
+          <span className="material-symbols-outlined text-gray-400 text-base">lock</span>
+        </div>
+        <div className="flex items-center justify-between py-3 border-b border-gray-50 mt-2">
+          <div>
+            <p className="text-sm font-medium text-[#0d1b2a]">3D-Drawings (Optional)</p>
+            <p className="text-[11px] text-gray-400">₹2,500 – ₹5,000</p>
+          </div>
+          <Toggle checked={drawings} onChange={setDrawings} />
+        </div>
+        <SectionLabel>Fee Breakdown</SectionLabel>
+        <FeeRow icon="description" label="Filing Fee" amount="₹5,000" />
+        <FeeRow icon="account_balance" label="Government Fee" amount="₹1,000" />
+        <FeeRow icon="schedule" label="Avg. Timeline" amount="6-10 Months" muted />
+      </div>
+    </EstimatorShell>
+  );
+}
+
+/* ─── Trademark Estimator ─── */
+function TrademarkEstimator({ onBack, onStartFiling }) {
+  const CLASS_GOV = 4500;
+  const PROFESSIONAL = 5000;
+  const OPT = { preFiling: 1500, logoDesign: 3000, expedited: 10000 };
+  const [classes, setClasses] = useState(1);
+  const [opts, setOpts] = useState({ preFiling: true, logoDesign: false, expedited: false });
+  const toggle = (k) => setOpts((o) => ({ ...o, [k]: !o[k] }));
+  const govFee = CLASS_GOV * classes;
+  const optTotal = Object.entries(opts).reduce((s, [k, v]) => s + (v ? OPT[k] : 0), 0);
+  const total = govFee + PROFESSIONAL + optTotal;
+  return (
+    <EstimatorShell
+      title="Trademark Estimator"
+      onBack={onBack}
+      total={`₹${total.toLocaleString("en-IN")}`}
+      totalNote={`Includes ${classes} Class${classes > 1 ? "es" : ""}`}
+      onStartFiling={onStartFiling}
+    >
+      <div className="pt-4">
+        <h3 className="text-xl font-bold text-[#0d1b2a]">Estimate Filing Cost</h3>
+        <p className="text-xs text-gray-400 mt-1 mb-4">Tailored for Individuals, Startups, and Small Entities.</p>
+        <SectionLabel>Number of Classes</SectionLabel>
+        <div className="flex gap-2 mt-1 mb-1">
+          {[1, 2, 3, 4].map((c) => (
+            <button
+              key={c}
+              onClick={() => setClasses(c)}
+              className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors ${
+                classes === c ? "bg-blue-600 text-white border-blue-600" : "bg-white text-[#0d1b2a] border-gray-200 hover:border-gray-300"
+              }`}
+            >
+              {c === 4 ? "4+" : `${c} Class`}
+            </button>
+          ))}
+        </div>
+        <SectionLabel>Standard Fees</SectionLabel>
+        <FeeRow icon="account_balance" label="Government Fee" sub="Form TM-A Filing" amount={`₹${govFee.toLocaleString("en-IN")}`} />
+        <FeeRow icon="gavel" label="Professional Fee" sub="Attorney Review & Filing" amount={`₹${PROFESSIONAL.toLocaleString("en-IN")}`} />
+        <SectionLabel>Optional Add-Ons</SectionLabel>
+        <ToggleRow label="Pre-filing Search" sub="₹1,500" checked={opts.preFiling} onChange={() => toggle("preFiling")} />
+        <ToggleRow label="Logo Design" sub="₹3,000" checked={opts.logoDesign} onChange={() => toggle("logoDesign")} />
+        <ToggleRow label="Expedited Processing" sub="₹10,000" checked={opts.expedited} onChange={() => toggle("expedited")} />
+        <div className="mt-4">
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+            <div className="flex items-start gap-2">
+              <span className="material-symbols-outlined text-blue-500 text-base mt-0.5 shrink-0">info</span>
+              <div>
+                <p className="text-xs font-semibold text-blue-700 mb-0.5">Important Note</p>
+                <p className="text-xs text-blue-600 leading-relaxed">Estimated fees are for electronic filings (e-filing) for Individuals/Startups. Physical filings incur a 10% higher government surcharge. Final pricing may vary.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </EstimatorShell>
+  );
+}
+
+/* ─── Copyright Estimator ─── */
+const WORK_TYPES = [
+  { key: "literary", label: "Literary / Dramatic", icon: "description" },
+  { key: "artistic", label: "Artistic", icon: "palette" },
+  { key: "musical", label: "Musical", icon: "music_note" },
+  { key: "film", label: "Cinematograph Film", icon: "movie" },
+];
+
+function CopyrightEstimator({ onBack, onStartFiling }) {
+  const GOV = 500;
+  const PROFESSIONAL = 3000;
+  const EXPEDITED_COST = 5000;
+  const [workType, setWorkType] = useState("literary");
+  const [expedited, setExpedited] = useState(false);
+  const total = GOV + PROFESSIONAL + (expedited ? EXPEDITED_COST : 0);
+  const selectedWork = WORK_TYPES.find((w) => w.key === workType);
+  return (
+    <EstimatorShell
+      title="Copyright Estimator"
+      onBack={onBack}
+      total={`₹${total.toLocaleString("en-IN")}`}
+      totalNote={`Includes ${selectedWork?.label || "Literary Work"}`}
+      onStartFiling={onStartFiling}
+    >
+      <div className="pt-4">
+        <h3 className="text-xl font-bold text-[#0d1b2a]">Estimate Copyright Cost</h3>
+        <p className="text-xs text-gray-400 mt-1 mb-4">For Individuals, Startups, and Creative Professionals.</p>
+        <SectionLabel>Type of Work</SectionLabel>
+        <div className="grid grid-cols-2 gap-2 mt-1 mb-1">
+          {WORK_TYPES.map((w) => (
+            <button
+              key={w.key}
+              onClick={() => setWorkType(w.key)}
+              className={`flex flex-col items-center gap-1.5 py-4 rounded-xl border text-xs font-semibold transition-colors ${
+                workType === w.key
+                  ? "border-blue-500 bg-blue-50 text-blue-700"
+                  : "border-gray-100 bg-white text-gray-500 hover:border-gray-200"
+              }`}
+            >
+              <span className="material-symbols-outlined text-2xl">{w.icon}</span>
+              {w.label}
+            </button>
+          ))}
+        </div>
+        <SectionLabel>Fee Breakdown</SectionLabel>
+        <FeeRow icon="account_balance" label="Government Fee (Official)" sub="Official statutory fee" amount="₹500" />
+        <FeeRow icon="description" label="Professional Filing Fee" sub="Agent processing fee" amount="₹3,000" />
+        <SectionLabel>Optional Services</SectionLabel>
+        <ToggleRow label="Expedited Registration" sub="₹5,000" checked={expedited} onChange={setExpedited} />
+        <div className="mt-4">
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+            <div className="flex items-start gap-2">
+              <span className="material-symbols-outlined text-blue-500 text-base mt-0.5 shrink-0">info</span>
+              <div>
+                <p className="text-xs font-semibold text-blue-700 mb-0.5">Fee Variation Notice</p>
+                <p className="text-xs text-blue-600 leading-relaxed">Statutory fees are based on the standard rate for most literary and artistic works. Fees may vary for specific categories like Sound Recordings or Cinematograph Films as per the official Copyright Act.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </EstimatorShell>
+  );
+}
+
+/* ─── Service Chooser ─── */
+const SERVICES = [
+  { key: "patent",    title: "Patent",             desc: "Utility, provisional, and design patent filing estimates.", icon: "lightbulb" },
+  { key: "trademark", title: "Trademark",           desc: "Brand names, logos, and slogan registration costs.",       icon: "verified" },
+  { key: "copyright", title: "Copyright",           desc: "Literary, artistic, and musical work protection fees.",    icon: "copyright" },
+  { key: "design",    title: "Design Registration", desc: "Industrial design and aesthetic layout estimates.",        icon: "design_services" },
+];
+
+/* ─── Page ─── */
+export default function CostEstimatorPage() {
+  const router = useRouter();
+  const [service, setService] = useState(null);
+  const handleStartFiling = () => router.push("/dashboard/cases/new");
+  return (
+    <div className="max-w-2xl mx-auto space-y-5">
+      {!service && (
+        <>
+          <div>
+            <h1 className="text-2xl font-bold text-[#0d1b2a]">IP Cost Estimator</h1>
+            <p className="text-sm text-gray-500 mt-1">Get an instant fee breakdown for your IP filing.</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 p-6">
+            <h2 className="text-xl font-bold text-[#0d1b2a] leading-tight">Which service would you like to estimate?</h2>
+            <p className="text-sm text-gray-400 mt-1 mb-5">Select a category to get an instant fee breakdown for your filing.</p>
+            <div className="space-y-3">
+              {SERVICES.map((s) => (
+                <button
+                  key={s.key}
+                  onClick={() => setService(s.key)}
+                  className="w-full text-left flex items-center gap-4 p-4 border border-gray-100 rounded-xl hover:shadow-sm transition-all group"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
+                    <span className="material-symbols-outlined text-blue-600 text-2xl">{s.icon}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-[#0d1b2a]">{s.title}</p>
+                    <p className="text-xs text-gray-400 mt-0.5 leading-snug">{s.desc}</p>
+                  </div>
+                  <span className="material-symbols-outlined text-gray-300 text-xl shrink-0">chevron_right</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+      {service === "patent"    && <PatentEstimator    onBack={() => setService(null)} onStartFiling={handleStartFiling} />}
+      {service === "design"    && <DesignEstimator    onBack={() => setService(null)} onStartFiling={handleStartFiling} />}
+      {service === "trademark" && <TrademarkEstimator onBack={() => setService(null)} onStartFiling={handleStartFiling} />}
+      {service === "copyright" && <CopyrightEstimator onBack={() => setService(null)} onStartFiling={handleStartFiling} />}
     </div>
   );
 }
