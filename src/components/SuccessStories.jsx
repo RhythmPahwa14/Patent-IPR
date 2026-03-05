@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 
 const stats = [
   { value: "98%", label: "Patent Grant Rate" },
-  { value: "1,200+", label: "Cases Won" },
-  { value: "150+", label: "Countries Covered" },
+  { value: "1,20+", label: "Cases Won" },
+  { value: "15+", label: "Countries Covered" },
   { value: "24 hrs", label: "Avg. Response Time" },
 ];
 
