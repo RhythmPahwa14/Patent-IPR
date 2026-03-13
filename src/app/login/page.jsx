@@ -2,8 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-const API_BASE = "https://patent-ipr-backend-springboot-dug6aphbfrfuadh3.southindia-01.azurewebsites.net";
+import { buildApiUrl } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,7 +21,7 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${API_BASE}/api/auth/login`, {
+      const res = await fetch(buildApiUrl("/api/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

@@ -5,45 +5,40 @@ const stats = [
   {
     icon: "work",
     label: "TOTAL ACTIVE CASES",
-    value: "42",
-    badge: "+2.4%",
-    badgeColor: "text-green-600",
+    value: "--",
+    badge: "No data",
+    badgeColor: "text-gray-500",
     border: "border-gray-100",
   },
   {
     icon: "visibility",
     label: "IN EXAMINATION",
-    value: "12",
-    badge: "Steady",
+    value: "--",
+    badge: "No data",
     badgeColor: "text-gray-500",
     border: "border-gray-100",
   },
   {
     icon: "verified",
     label: "GRANTED IPS",
-    value: "28",
-    badge: "Achievement",
-    badgeColor: "text-[#f5a623]",
+    value: "--",
+    badge: "No data",
+    badgeColor: "text-gray-500",
     border: "border-[#f5a623]/30",
     highlight: true,
   },
   {
     icon: "videocam",
     label: "PENDING PAYMENTS",
-    value: "$8,420",
-    badge: "Due Now",
-    badgeColor: "text-red-500",
+    value: "--",
+    badge: "No data",
+    badgeColor: "text-gray-500",
     border: "border-gray-100",
   },
 ];
 
-const cases = [
-  { id: "US-10294-A", title: "AI-Driven Sorting System", desc: "Method for automated sorting using neural networks.", type: "Utility Patent", status: "GRANTED", statusColor: "bg-green-100 text-green-700", updated: "Oct 12, 2023" },
-  { id: "EU-22019-B", title: "Bio-Degradable Casing", desc: "Sustainable packaging for consumer electronics.", type: "Design Patent", status: "FILED", statusColor: "bg-[#0d1b2a] text-white", updated: "Nov 04, 2023" },
-  { id: "US-11582-X", title: "Quantum Encryption Protocol", desc: "End-to-end security using quantum entanglement.", type: "Software Patent", status: "EXAMINATION", statusColor: "bg-gray-200 text-gray-700", updated: "Oct 29, 2023" },
-  { id: "CN-48921-C", title: "Lithium-Air Battery Cell", desc: "High density energy storage for EV applications.", type: "Chemical Patent", status: "FER ISSUED", statusColor: "bg-[#f5a623] text-white", updated: "Oct 15, 2023" },
-  { id: "JP-99231-K", title: "Mechanical Wind Turbine", desc: "Low-friction vertical axis rotor design.", type: "Mechanical Patent", status: "REJECTED", statusColor: "bg-red-500 text-white", updated: "Sep 20, 2023" },
-];
+const cases = [];
+const upcomingDeadlines = [];
 
 export default function DashboardPage() {
   return (
@@ -51,7 +46,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-[#0d1b2a]">Dashboard Overview</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Welcome back. You have 3 cases requiring immediate attention.</p>
+        <p className="text-sm text-gray-500 mt-0.5">Live portfolio data will appear here once synced from backend.</p>
       </div>
 
       {/* Stats */}
@@ -115,13 +110,20 @@ export default function DashboardPage() {
                   </td>
                 </tr>
               ))}
+              {cases.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-400">
+                    No cases available. Records will be shown after backend sync.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
         <div className="flex items-center justify-between px-6 py-3 border-t border-gray-100">
-          <p className="text-xs text-gray-400">Showing 5 of 42 active cases</p>
+          <p className="text-xs text-gray-400">Showing {cases.length} cases</p>
           <div className="flex items-center gap-1">
             <button className="w-7 h-7 flex items-center justify-center rounded text-gray-400 hover:bg-gray-100 transition-colors">
               <span className="material-symbols-outlined text-sm">chevron_left</span>
@@ -154,11 +156,7 @@ export default function DashboardPage() {
             Upcoming Deadlines
           </h3>
           <div className="space-y-3">
-            {[
-              { label: "FER Response — US-11582-X", date: "Feb 28, 2024", urgent: true },
-              { label: "Renewal Fee — EU-22019-B", date: "Mar 15, 2024", urgent: false },
-              { label: "Annual Fee — CN-48921-C", date: "Apr 01, 2024", urgent: false },
-            ].map((d) => (
+            {upcomingDeadlines.map((d) => (
               <div key={d.label} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
                 <div className="flex items-center gap-2">
                   <span className={`w-2 h-2 rounded-full ${d.urgent ? "bg-red-500" : "bg-[#f5a623]"}`} />
@@ -167,6 +165,9 @@ export default function DashboardPage() {
                 <span className={`text-xs font-semibold ${d.urgent ? "text-red-500" : "text-gray-400"}`}>{d.date}</span>
               </div>
             ))}
+            {upcomingDeadlines.length === 0 && (
+              <p className="text-sm text-gray-400">No upcoming deadlines yet.</p>
+            )}
           </div>
         </div>
       </div>

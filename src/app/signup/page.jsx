@@ -2,8 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-const API_BASE = "https://patent-ipr-backend-springboot-dug6aphbfrfuadh3.southindia-01.azurewebsites.net";
+import { buildApiUrl } from "@/lib/api";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -46,7 +45,7 @@ export default function SignupPage() {
       const parts = form.fullName.trim().split(" ");
       const name = parts[0];
       const lastName = parts.slice(1).join(" ") || parts[0];
-      const res = await fetch(`${API_BASE}/api/auth/signup`, {
+      const res = await fetch(buildApiUrl("/api/auth/signup"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

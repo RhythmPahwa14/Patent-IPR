@@ -1,15 +1,7 @@
 "use client";
 import { useState } from "react";
 
-const docs = [
-  { id: 1, name: "First_Examination_Report_2024.pdf", case: "US-10294-A", type: "PDF", size: "2.1 MB", date: "Jan 18, 2024", category: "Examination" },
-  { id: 2, name: "Patent_Grant_Certificate.pdf", case: "US-10294-A", type: "PDF", size: "0.8 MB", date: "Oct 12, 2023", category: "Certificate" },
-  { id: 3, name: "Application_Draft_Final.docx", case: "EU-22019-B", type: "DOC", size: "1.4 MB", date: "Nov 04, 2023", category: "Application" },
-  { id: 4, name: "Prior_Art_Search_Report.pdf", case: "US-9921-A", type: "PDF", size: "3.8 MB", date: "Nov 15, 2023", category: "Search Report" },
-  { id: 5, name: "Office_Action_Response.docx", case: "US-11582-X", type: "DOC", size: "2.2 MB", date: "Oct 29, 2023", category: "Response" },
-  { id: 6, name: "Formal_Drawings_v2.png", case: "CN-48921-C", type: "IMG", size: "4.5 MB", date: "Oct 15, 2023", category: "Drawings" },
-  { id: 7, name: "Rejection_Notice.pdf", case: "JP-99231-K", type: "PDF", size: "1.1 MB", date: "Sep 20, 2023", category: "Notice" },
-];
+const docs = [];
 
 const typeColors = { PDF: "bg-red-100 text-red-600", DOC: "bg-blue-100 text-blue-600", IMG: "bg-green-100 text-green-600" };
 
@@ -65,6 +57,13 @@ export default function DocumentsPage() {
                 </td>
               </tr>
             ))}
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-5 py-12 text-center text-sm text-gray-400">
+                  No documents available. Files will appear once fetched from backend.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

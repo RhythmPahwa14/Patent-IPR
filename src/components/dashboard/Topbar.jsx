@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { buildApiUrl } from "@/lib/api";
 
 export default function DashboardTopbar({ title, searchPlaceholder = "Search case numbers, titles, or inventors...", onMenuOpen }) {
   const router = useRouter();
@@ -14,15 +15,12 @@ export default function DashboardTopbar({ title, searchPlaceholder = "Search cas
         const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
         if (!token) return;
 
-        const response = await fetch(
-          "https://patent-ipr-backend-springboot-dug6aphbfrfuadh3.southindia-01.azurewebsites.net/api/auth/me",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-            },
-          }
-        );
+        const response = await fetch(buildApiUrl("/api/auth/me"), {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        });
 
         if (response.status === 401) {
           localStorage.removeItem("token");

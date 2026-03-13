@@ -2,16 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 
-const allCases = [
-  { id: "US-10294-A", title: "AI-Driven Sorting System", desc: "Method for automated sorting using neural networks.", type: "Utility Patent", status: "GRANTED", statusColor: "bg-green-100 text-green-700", updated: "Oct 12, 2023", jurisdiction: "USPTO (USA)" },
-  { id: "EU-22019-B", title: "Bio-Degradable Casing", desc: "Sustainable packaging for consumer electronics.", type: "Design Patent", status: "FILED", statusColor: "bg-[#0d1b2a] text-white", updated: "Nov 04, 2023", jurisdiction: "EPO (EU)" },
-  { id: "US-11582-X", title: "Quantum Encryption Protocol", desc: "End-to-end security using quantum entanglement.", type: "Software Patent", status: "EXAMINATION", statusColor: "bg-gray-200 text-gray-700", updated: "Oct 29, 2023", jurisdiction: "USPTO (USA)" },
-  { id: "CN-48921-C", title: "Lithium-Air Battery Cell", desc: "High density energy storage for EV applications.", type: "Chemical Patent", status: "FER ISSUED", statusColor: "bg-[#f5a623] text-white", updated: "Oct 15, 2023", jurisdiction: "CNIPA (China)" },
-  { id: "JP-99231-K", title: "Mechanical Wind Turbine", desc: "Low-friction vertical axis rotor design.", type: "Mechanical Patent", status: "REJECTED", statusColor: "bg-red-500 text-white", updated: "Sep 20, 2023", jurisdiction: "JPO (Japan)" },
-  { id: "IN-30241-M", title: "Solar Thermal Collector", desc: "High-efficiency parabolic trough collector design.", type: "Utility Patent", status: "FILED", statusColor: "bg-[#0d1b2a] text-white", updated: "Aug 15, 2023", jurisdiction: "IPO (India)" },
-  { id: "US-77821-P", title: "Neural Interface Chip", desc: "Brain-computer interface with low-latency signal processing.", type: "Software Patent", status: "EXAMINATION", statusColor: "bg-gray-200 text-gray-700", updated: "Jul 30, 2023", jurisdiction: "USPTO (USA)" },
-  { id: "GB-10021-Q", title: "Biodegradable Circuit Board", desc: "Eco-friendly PCB using natural polymer substrates.", type: "Design Patent", status: "GRANTED", statusColor: "bg-green-100 text-green-700", updated: "Jun 22, 2023", jurisdiction: "UKIPO (UK)" },
-];
+const allCases = [];
 
 const statusFilters = ["All", "GRANTED", "FILED", "EXAMINATION", "FER ISSUED", "REJECTED"];
 

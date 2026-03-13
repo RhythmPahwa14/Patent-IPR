@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { buildApiUrl } from "@/lib/api";
 
 const steps = ["Case Details", "Applicant Info", "Documents", "Review"];
 
@@ -14,8 +15,6 @@ const FIELD_OPTIONS = [
   "Aerospace",
   "Other",
 ];
-
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "https://patent-ipr-backend-springboot-dug6aphbfrfuadh3.southindia-01.azurewebsites.net").replace(/\/+$/, "");
 
 export default function NewCasePage() {
   const router = useRouter();
@@ -95,7 +94,7 @@ export default function NewCasePage() {
         params.set("fieldOfInventionOther", form.fieldOfInventionOther);
       }
 
-      const res = await fetch(`${API_BASE}/api/v1/patents/submit?${params.toString()}`, {
+      const res = await fetch(`${buildApiUrl("/api/v1/patents/submit")}?${params.toString()}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ supportingDocument: form.supportingDocument }),

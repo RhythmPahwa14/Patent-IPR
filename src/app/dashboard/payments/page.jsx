@@ -1,12 +1,6 @@
 "use client";
 
-const payments = [
-  { id: "INV-2024-001", case: "US-10294-A", desc: "Government Filing Fee", amount: 320, status: "PAID", date: "Oct 12, 2023", statusColor: "bg-green-100 text-green-700" },
-  { id: "INV-2024-002", case: "EU-22019-B", desc: "Application Drafting Services", amount: 3500, status: "PAID", date: "Nov 04, 2023", statusColor: "bg-green-100 text-green-700" },
-  { id: "INV-2024-003", case: "US-11582-X", desc: "Examination Fee", amount: 400, status: "DUE", date: "Feb 28, 2024", statusColor: "bg-red-100 text-red-600" },
-  { id: "INV-2024-004", case: "CN-48921-C", desc: "Professional Service Fee", amount: 2200, status: "DUE", date: "Mar 15, 2024", statusColor: "bg-red-100 text-red-600" },
-  { id: "INV-2024-005", case: "JP-99231-K", desc: "Filing Formalities & Review", amount: 850, status: "PENDING", date: "Apr 01, 2024", statusColor: "bg-amber-100 text-amber-700" },
-];
+const payments = [];
 
 const totalDue = payments.filter((p) => p.status === "DUE").reduce((s, p) => s + p.amount, 0);
 const totalPaid = payments.filter((p) => p.status === "PAID").reduce((s, p) => s + p.amount, 0);
@@ -70,6 +64,13 @@ export default function PaymentsPage() {
                 </td>
               </tr>
             ))}
+            {payments.length === 0 && (
+              <tr>
+                <td colSpan={7} className="px-5 py-12 text-center text-sm text-gray-400">
+                  No invoices available. Billing records will appear after backend sync.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

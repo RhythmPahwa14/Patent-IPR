@@ -3,18 +3,21 @@ import { useState } from "react";
 
 const services = [
   "Patent Filing",
-  "Trademark Protection",
-  "Copyright Registration",
+  "Trademark Filing",
   "Design Registration",
-  "Portfolio Management",
-  "Cost Estimator",
+  "Copyright Registration",
+  "Prior-Art Search",
+  "FER / Examination Response",
+  "IP Consultation",
 ];
 
 export default function CTAContact() {
   const [form, setForm] = useState({
     fullName: "",
-    workEmail: "",
+    organization: "",
+    email: "",
     phone: "",
+    city: "",
     service: "Patent Filing",
     message: "",
   });
@@ -25,46 +28,59 @@ export default function CTAContact() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert("Request sent! We'll get back to you within 24 hours.");
+    alert("Request received. Our team will contact you shortly on email or phone.");
   };
 
   return (
-    <section id="contact" className="py-24 bg-[#0d1b2a]">
-      <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
+    <section id="contact" className="py-24 bg-[#f7f7f8]">
+      <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-10 items-start">
         {/* Left */}
-        <div>
-          <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-6">
-            Ready to Secure Your Intellectual Property?
+        <div className="bg-white border border-gray-200 rounded-2xl p-8">
+          <div className="inline-flex items-center gap-2 bg-[#fff7e8] border border-[#f5a623]/30 rounded-full px-4 py-1.5 mb-5">
+            <span className="w-2 h-2 rounded-full bg-[#f5a623]" />
+            <span className="text-xs font-semibold uppercase tracking-widest text-[#0d1b2a]">
+              PATENT-IPR Helpdesk
+            </span>
+          </div>
+
+          <h2 className="text-3xl md:text-4xl font-black text-[#0d1b2a] leading-tight mb-4">
+            Start Your IP Filing with a Professional Team
           </h2>
-          <p className="text-gray-400 text-base leading-relaxed mb-10">
-            Consult with our expert IP attorneys today. Get a clear roadmap for
-            your filings and a detailed cost estimate within 24 hours.
+          <p className="text-gray-600 text-base leading-relaxed mb-7">
+            PATENT-IPR supports startups, SMEs, research groups, and enterprises
+            with structured filing workflows for patents, trademarks, designs,
+            and copyright across India.
           </p>
 
-          {/* Online attorneys badge */}
-          <div className="inline-flex items-center gap-3 bg-white/10 border border-white/20 rounded-full px-5 py-2.5">
-            {/* Avatar cluster */}
-            <div className="flex -space-x-2">
-              {["bg-[#4a7c59]", "bg-[#f5a623]", "bg-blue-500"].map((bg, i) => (
-                <div
-                  key={i}
-                  className={`w-7 h-7 rounded-full ${bg} border-2 border-[#0d1b2a] flex items-center justify-center text-white text-[9px] font-bold`}
-                >
-                  {["JA", "MR", "KL"][i]}
-                </div>
-              ))}
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+              <p className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold">
+                Response Window
+              </p>
+              <p className="text-sm font-bold text-[#0d1b2a] mt-1">Within 1 business day</p>
             </div>
-            <span className="text-white text-sm font-semibold">
-              12 Attorneys Online Now
-            </span>
+            <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+              <p className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold">
+                Consultation Hours
+              </p>
+              <p className="text-sm font-bold text-[#0d1b2a] mt-1">Mon-Sat, 10:00 AM-6:00 PM IST</p>
+            </div>
           </div>
         </div>
 
         {/* Right – Form */}
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-2xl p-8 flex flex-col gap-4"
+          className="bg-white border border-gray-200 rounded-2xl p-8 flex flex-col gap-4"
         >
+          <div>
+            <h3 className="text-xl font-bold text-[#0d1b2a]">Request a Consultation</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Share your requirement. Our team will contact you with scope,
+              process, and next steps.
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
@@ -73,7 +89,7 @@ export default function CTAContact() {
               <input
                 type="text"
                 name="fullName"
-                placeholder="John Doe"
+                placeholder="Enter your full name"
                 value={form.fullName}
                 onChange={handleChange}
                 className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-[#0d1b2a] focus:outline-none focus:border-[#f5a623] transition-colors"
@@ -82,16 +98,15 @@ export default function CTAContact() {
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
-                Work Email
+                Organization
               </label>
               <input
-                type="email"
-                name="workEmail"
-                placeholder="john@company.com"
-                value={form.workEmail}
+                type="text"
+                name="organization"
+                placeholder="Company / Startup / Institute"
+                value={form.organization}
                 onChange={handleChange}
                 className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-[#0d1b2a] focus:outline-none focus:border-[#f5a623] transition-colors"
-                required
               />
             </div>
           </div>
@@ -99,15 +114,30 @@ export default function CTAContact() {
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
-                Phone
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                placeholder="name@example.com"
+                value={form.email}
+                onChange={handleChange}
+                className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-[#0d1b2a] focus:outline-none focus:border-[#f5a623] transition-colors"
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
+                Phone (India)
               </label>
               <input
                 type="tel"
                 name="phone"
-                placeholder="+1 (234) 567 890"
+                placeholder="+91 98765 43210"
                 value={form.phone}
                 onChange={handleChange}
                 className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-[#0d1b2a] focus:outline-none focus:border-[#f5a623] transition-colors"
+                required
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -131,11 +161,25 @@ export default function CTAContact() {
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
+              City / State
+            </label>
+            <input
+              type="text"
+              name="city"
+              placeholder="e.g. Chandigarh, Punjab"
+              value={form.city}
+              onChange={handleChange}
+              className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-[#0d1b2a] focus:outline-none focus:border-[#f5a623] transition-colors"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
               Message
             </label>
             <textarea
               name="message"
-              placeholder="Briefly describe your innovation…"
+              placeholder="Briefly describe your idea, current filing stage, and what support you need."
               value={form.message}
               onChange={handleChange}
               rows={4}
@@ -143,11 +187,16 @@ export default function CTAContact() {
             />
           </div>
 
+          <p className="text-[11px] text-gray-500 leading-relaxed">
+            By submitting this form, you agree to be contacted regarding your
+            IP filing query and service requirements.
+          </p>
+
           <button
             type="submit"
             className="w-full bg-[#0d1b2a] text-white font-semibold py-3.5 rounded-lg hover:bg-[#1a2f4a] transition-colors text-sm tracking-wide"
           >
-            Send Request
+            Submit Request
           </button>
         </form>
       </div>

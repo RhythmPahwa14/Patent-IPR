@@ -18,7 +18,7 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="text-[11px] text-gray-500">
-          © 2025 PATENT-IPR. All rights reserved.
+          © 2026 PATENT-IPR. All rights reserved.
         </div>
       </div>
     </footer>

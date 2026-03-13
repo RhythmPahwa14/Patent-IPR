@@ -137,12 +137,9 @@ export default function MeetOurTeam() {
             </span>
           </div>
           <h2 className="text-4xl font-black text-[#0d1b2a] mb-4">
-            Meet Our IP Expert
+            Meet Our Team
           </h2>
-          <p className="text-gray-500 text-base max-w-xl mx-auto leading-relaxed">
-            Real profile details of Dr. Sartajvir Singh, supporting clients with
-            patent filing, prosecution, and innovation advisory.
-          </p>
+          
         </div>
 
         {/* Team grid */}
