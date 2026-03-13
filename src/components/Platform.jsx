@@ -79,11 +79,11 @@ export default function Platform() {
             <div className="grid grid-cols-2 gap-4 mb-5">
               <div className="bg-white/5 rounded-xl p-3">
                 <div className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Filing Date</div>
-                <div className="font-bold text-sm">Oct 24, 2023</div>
+                <div className="font-bold text-sm">Feb 13, 2026</div>
               </div>
               <div className="bg-white/5 rounded-xl p-3">
                 <div className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">Est. Asset Value</div>
-                <div className="font-bold text-sm text-[#f5a623]">$1.6M</div>
+                <div className="font-bold text-sm text-[#f5a623]">INR 1.8 Lakh</div>
               </div>
             </div>
 
@@ -104,11 +104,11 @@ export default function Platform() {
               <div className="text-[10px] uppercase tracking-widest text-gray-400 mb-3">Messages</div>
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-full bg-[#4a7c59] flex items-center justify-center text-white text-xs font-bold shrink-0">
-                  JA
+                  R
                 </div>
                 <div>
-                  <div className="text-xs font-semibold mb-0.5">Jennifer (Attorney)</div>
-                  <div className="text-gray-400 text-xs">Your application is moving to final review stage...</div>
+                  <div className="text-xs font-semibold mb-0.5">Rhythm (Patent Attorney)</div>
+                  <div className="text-gray-400 text-xs">Your application has moved to the final review stage for the 2026 filing cycle.</div>
                 </div>
               </div>
             </div>
