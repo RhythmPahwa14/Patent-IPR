@@ -1,12 +1,36 @@
 "use client";
-import { useState } from "react";
-
-const conversations = [];
+import { useEffect, useState } from "react";
+import { apiRequest } from "@/lib/api";
 
 export default function MessagesPage() {
+  const [conversations, setConversations] = useState([]);
   const [active, setActive] = useState(null);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    const loadConversations = async () => {
+      const result = await apiRequest("/api/v1/patents/user/filings?page=0&size=50&sort=submittedAt,desc");
+      const filings = Array.isArray(result.data?.data?.content) ? result.data.data.content : [];
+
+      const seed = filings.map((f) => ({
+        id: f.referenceNumber,
+        title: `${f.referenceNumber || "Case"} - ${f.title || "Untitled Filing"}`,
+        agent: "Patent Support",
+        messages: [
+          {
+            id: `${f.referenceNumber}-seed`,
+            sender: "agent",
+            text: `This is a placeholder conversation for ${f.referenceNumber || "your filing"}. Live chat history requires messaging APIs.`,
+          },
+        ],
+      }));
+
+      setConversations(seed);
+    };
+
+    loadConversations();
+  }, []);
 
   const selectConvo = (conversation) => {
     setActive(conversation);
@@ -39,6 +63,9 @@ export default function MessagesPage() {
             <span className="material-symbols-outlined text-xl">edit_square</span>
           </button>
         </div>
+        <p className="px-4 py-2 text-[11px] text-gray-400 border-b border-gray-100">
+          Messaging endpoints are not available yet. This view uses filing data as conversation stubs.
+        </p>
         <div className="p-3 border-b border-gray-100">
           <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
             <span className="material-symbols-outlined text-gray-400 text-base">search</span>

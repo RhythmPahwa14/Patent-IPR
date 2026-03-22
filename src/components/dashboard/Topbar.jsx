@@ -2,45 +2,27 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { buildApiUrl } from "@/lib/api";
+import { getStoredUser, getToken } from "@/lib/api";
 
 export default function DashboardTopbar({ title, searchPlaceholder = "Search case numbers, titles, or inventors...", onMenuOpen }) {
   const router = useRouter();
-  const [user, setUser] = useState({ name: "Sandeep Vashishtha", role: "Individual" });
+  const [user] = useState(() => {
+    const storedUser = getStoredUser();
+    return {
+      name: storedUser?.name || "User",
+      role: storedUser?.role || "Client",
+    };
+  });
 
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-        if (!token) return;
+    const token = getToken();
+    if (!token) {
+      router.push("/login");
+      return;
+    }
 
-        const response = await fetch(buildApiUrl("/api/auth/me"), {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-        });
-
-        if (response.status === 401) {
-          localStorage.removeItem("token");
-          router.push("/login");
-          return;
-        }
-
-        if (response.ok) {
-          const data = await response.json();
-          setUser({
-            name: `${data.name} ${data.lastName}`,
-            role: " ",
-          });
-        }
-      } catch (error) {
-        console.error("Failed to fetch user:", error);
-      }
-    };
-    fetchUser();
-  }, []);
+  }, [router]);
 
   return (
     <header className="h-14 bg-white border-b border-gray-100 flex items-center gap-3 px-4 shrink-0">

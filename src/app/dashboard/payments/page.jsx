@@ -1,16 +1,48 @@
 "use client";
-
-const payments = [];
-
-const totalDue = payments.filter((p) => p.status === "DUE").reduce((s, p) => s + p.amount, 0);
-const totalPaid = payments.filter((p) => p.status === "PAID").reduce((s, p) => s + p.amount, 0);
+import { useEffect, useMemo, useState } from "react";
+import { apiRequest } from "@/lib/api";
 
 export default function PaymentsPage() {
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const result = await apiRequest("/api/v1/patents/user/filings?page=0&size=100&sort=submittedAt,desc");
+      const filings = Array.isArray(result.data?.data?.content) ? result.data.data.content : [];
+
+      // Placeholder invoice projection from filing status until billing APIs are available.
+      const mapped = filings.map((f, index) => {
+        const due = f.status === "PENDING" || f.status === "DRAFT";
+        const amount = due ? 7500 : 7500;
+        return {
+          id: `INV-${index + 1}`,
+          case: f.referenceNumber || "-",
+          desc: `Patent filing fee - ${f.title || "Untitled Filing"}`,
+          amount,
+          status: due ? "DUE" : "PAID",
+          statusColor: due ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700",
+          date: f.submittedAt ? new Date(f.submittedAt).toLocaleDateString() : "-",
+        };
+      });
+
+      setPayments(mapped);
+      setLoading(false);
+    };
+
+    load();
+  }, []);
+
+  const totalDue = useMemo(() => payments.filter((p) => p.status === "DUE").reduce((s, p) => s + p.amount, 0), [payments]);
+  const totalPaid = useMemo(() => payments.filter((p) => p.status === "PAID").reduce((s, p) => s + p.amount, 0), [payments]);
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-[#0d1b2a]">Payments</h1>
         <p className="text-sm text-gray-500 mt-0.5">Manage invoices and fees across your IP portfolio.</p>
+        <p className="text-xs text-gray-400 mt-1">Billing APIs are not part of the current backend contract, so amounts are derived from filing status.</p>
       </div>
 
       {/* Summary cards */}
@@ -64,11 +96,16 @@ export default function PaymentsPage() {
                 </td>
               </tr>
             ))}
-            {payments.length === 0 && (
+            {!loading && payments.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-5 py-12 text-center text-sm text-gray-400">
                   No invoices available. Billing records will appear after backend sync.
                 </td>
+              </tr>
+            )}
+            {loading && (
+              <tr>
+                <td colSpan={7} className="px-5 py-12 text-center text-sm text-gray-400">Loading invoices...</td>
               </tr>
             )}
           </tbody>

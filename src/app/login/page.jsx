@@ -7,7 +7,7 @@ import { buildApiUrl } from "@/lib/api";
 export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({ emailId: "", password: "" });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -29,6 +29,9 @@ export default function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Invalid credentials");
       localStorage.setItem("token", data.token);
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
       router.push("/dashboard");
     } catch (err) {
       setError(err.message);
@@ -66,8 +69,8 @@ export default function LoginPage() {
               <span className="material-symbols-outlined text-gray-400 text-base">mail</span>
               <input
                 type="email"
-                name="emailId"
-                value={form.emailId}
+                name="email"
+                value={form.email}
                 onChange={handleChange}
                 placeholder="legal@company.com"
                 required

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { buildApiUrl } from "@/lib/api";
+import { buildApiUrl, getToken } from "@/lib/api";
 
 const steps = ["Case Details", "Applicant Info", "Documents", "Review"];
 
@@ -23,7 +23,6 @@ export default function NewCasePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [fileName, setFileName] = useState("");
-  const [abstractError, setAbstractError] = useState("");
 
   const [form, setForm] = useState({
     title: "",
@@ -37,25 +36,6 @@ export default function NewCasePage() {
   });
 
   const handle = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-
-  const validateAbstract = (value) => {
-    const text = (value || "").trim();
-    const words = text.length === 0 ? 0 : text.split(/\s+/).filter(Boolean).length;
-    if (words === 0) {
-      setAbstractError("Abstract is required (minimum 30 words).");
-      return false;
-    }
-    if (words < 30) {
-      setAbstractError("Abstract must be at least 30 words.");
-      return false;
-    }
-    if (words > 200) {
-      setAbstractError("Abstract must be at most 200 words.");
-      return false;
-    }
-    setAbstractError("");
-    return true;
-  };
 
   const handleFile = async (file) => {
     if (!file) return;
@@ -74,12 +54,6 @@ export default function NewCasePage() {
   const handleSubmit = async () => {
     setError("");
     setSubmitting(true);
-    // validate abstract before submitting
-    if (!validateAbstract(form.abstract)) {
-      setSubmitting(false);
-      setError("Please fix validation errors before submitting.");
-      return;
-    }
 
     try {
       const params = new URLSearchParams({
@@ -96,7 +70,10 @@ export default function NewCasePage() {
 
       const res = await fetch(`${buildApiUrl("/api/v1/patents/submit")}?${params.toString()}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}),
+        },
         body: JSON.stringify({ supportingDocument: form.supportingDocument }),
       });
 
@@ -112,16 +89,12 @@ export default function NewCasePage() {
       const ref = encodeURIComponent(data.data?.referenceNumber || "");
       const pid = encodeURIComponent(data.data?.patentId || "");
       router.push(`/dashboard/cases/success?ref=${ref}&patentId=${pid}`);
-    } catch (err) {
+    } catch {
       setError("Network error. Please check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
   };
-
-  const abstractWordCount = (form.abstract || "").trim().length === 0
-    ? 0
-    : (form.abstract || "").trim().split(/\s+/).filter(Boolean).length;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -204,26 +177,11 @@ export default function NewCasePage() {
                 </label>
                 <textarea
                   value={form.abstract}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    handle("abstract", v);
-                    validateAbstract(v);
-                  }}
+                  onChange={(e) => handle("abstract", e.target.value)}
                   rows={4}
                   placeholder="Brief description of the invention..."
-                  className={`w-full border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#0d1b2a] resize-none ${
-                    abstractError ? "border-red-200 bg-red-50" : "border-gray-200"
-                  }`}
+                  className="w-full border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#0d1b2a] resize-none border-gray-200"
                 />
-                {abstractError && <p className="text-xs text-red-500 mt-1">{abstractError}</p>}
-                <div className="flex items-center justify-between mt-1">
-                  <p className="text-xs text-gray-500">{abstractWordCount} words</p>
-                  <p className={`text-xs ${abstractWordCount > 200 ? "text-red-500" : "text-gray-400"}`}>
-                    {abstractWordCount > 200
-                      ? `${abstractWordCount - 200} over limit`
-                      : `${200 - abstractWordCount} words remaining`}
-                  </p>
-                </div>
             </div>
           </>
         )}
@@ -359,12 +317,7 @@ export default function NewCasePage() {
           )}
           {step < steps.length - 1 ? (
             <button
-              onClick={() => {
-                if (step === 0) {
-                  if (!validateAbstract(form.abstract)) return;
-                }
-                setStep((s) => s + 1);
-              }}
+              onClick={() => setStep((s) => s + 1)}
               className="flex-1 bg-[#0d1b2a] text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-[#1a2f4a] transition-colors"
             >
               Continue

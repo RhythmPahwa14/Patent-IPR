@@ -8,7 +8,7 @@ export default function SignupPage() {
   const router = useRouter();
   const [form, setForm] = useState({
     fullName: "",
-    emailId: "",
+    email: "",
     phone: "",
     password: "",
     individual: true,
@@ -28,7 +28,7 @@ export default function SignupPage() {
   const validate = () => {
     const errs = {};
     if (!form.fullName.trim()) errs.fullName = "Full name is required";
-    if (!form.emailId.trim()) errs.emailId = "Email is required";
+    if (!form.email.trim()) errs.email = "Email is required";
     if (!form.password || form.password.length < 8 || !/[^a-zA-Z0-9]/.test(form.password))
       errs.password = "Must be at least 8 characters with one special symbol";
     if (!form.agreed) errs.agreed = "You must agree to the terms";
@@ -42,26 +42,32 @@ export default function SignupPage() {
     setLoading(true);
     setError("");
     try {
-      const parts = form.fullName.trim().split(" ");
-      const name = parts[0];
-      const lastName = parts.slice(1).join(" ") || parts[0];
-      const res = await fetch(buildApiUrl("/api/auth/signup"), {
+      const res = await fetch(buildApiUrl("/api/auth/register"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
-          lastName,
-          emailId: form.emailId,
-          individual: form.individual,
+          name: form.fullName.trim(),
+          email: form.email,
           password: form.password,
+          role: "CLIENT",
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Registration failed");
-      localStorage.setItem("token", data.token);
-      router.push("/dashboard");
+
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+
+      // Register response does not always include token, so route to login if absent.
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        router.push("/dashboard");
+      } else {
+        router.push("/login");
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err?.message === "Failed to fetch" ? "Unable to reach server. Please try again in a moment." : err.message);
     } finally {
       setLoading(false);
     }
@@ -102,18 +108,18 @@ export default function SignupPage() {
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-[#0d1b2a]">Email</label>
-            <div className={`flex items-center border rounded-lg px-3 py-3 gap-2 focus-within:border-[#0d1b2a] transition-colors ${fieldErrors.emailId ? "border-red-400" : "border-gray-200"}`}>
+            <div className={`flex items-center border rounded-lg px-3 py-3 gap-2 focus-within:border-[#0d1b2a] transition-colors ${fieldErrors.email ? "border-red-400" : "border-gray-200"}`}>
               <span className="material-symbols-outlined text-gray-400 text-base">mail</span>
               <input
                 type="email"
-                name="emailId"
-                value={form.emailId}
+                name="email"
+                value={form.email}
                 onChange={handleChange}
                 placeholder="name@company.com"
                 className="flex-1 text-sm text-[#0d1b2a] outline-none placeholder:text-gray-400 bg-transparent"
               />
             </div>
-            {fieldErrors.emailId && <p className="text-xs text-red-500">{fieldErrors.emailId}</p>}
+            {fieldErrors.email && <p className="text-xs text-red-500">{fieldErrors.email}</p>}
           </div>
 
           {/* Phone
