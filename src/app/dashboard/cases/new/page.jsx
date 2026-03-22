@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { buildApiUrl, getToken } from "@/lib/api";
+import { submitClientPatent } from "@/lib/api";
 
 const steps = ["Case Details", "Applicant Info", "Documents", "Review"];
 
@@ -56,38 +56,29 @@ export default function NewCasePage() {
     setSubmitting(true);
 
     try {
-      const params = new URLSearchParams({
+      const result = await submitClientPatent({
         title: form.title,
+        description: form.abstract,
+        abstractText: form.abstract,
         fieldOfInvention: form.fieldOfInvention,
-        abstract: form.abstract,
+        fieldOfInventionOther: form.fieldOfInventionOther,
         applicantName: form.applicantName,
         applicantEmail: form.applicantEmail,
         applicantMobile: form.applicantMobile,
-      });
-      if (form.fieldOfInvention === "Other" && form.fieldOfInventionOther) {
-        params.set("fieldOfInventionOther", form.fieldOfInventionOther);
-      }
-
-      const res = await fetch(`${buildApiUrl("/api/v1/patents/submit")}?${params.toString()}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}),
-        },
-        body: JSON.stringify({ supportingDocument: form.supportingDocument }),
+        supportingDocument: form.supportingDocument,
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
+      if (!result.ok) {
+        const data = result.data || {};
         const fieldErrors = data.errors?.map((e) => `${e.field ? e.field + ": " : ""}${e.message}`).join(" | ");
         const errMsg = fieldErrors || data.message || "Submission failed. Please try again.";
         setError(errMsg);
         return;
       }
 
-      const ref = encodeURIComponent(data.data?.referenceNumber || "");
-      const pid = encodeURIComponent(data.data?.patentId || "");
+      const payload = result.data?.data || result.data || {};
+      const ref = encodeURIComponent(payload.referenceNumber || "");
+      const pid = encodeURIComponent(payload.patentId || payload.id || "");
       router.push(`/dashboard/cases/success?ref=${ref}&patentId=${pid}`);
     } catch {
       setError("Network error. Please check your connection and try again.");

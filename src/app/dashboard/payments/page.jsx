@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { apiRequest } from "@/lib/api";
+import { getClientPatents } from "@/lib/api";
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState([]);
@@ -9,8 +9,8 @@ export default function PaymentsPage() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const result = await apiRequest("/api/v1/patents/user/filings?page=0&size=100&sort=submittedAt,desc");
-      const filings = Array.isArray(result.data?.data?.content) ? result.data.data.content : [];
+      const result = await getClientPatents({ page: 0, size: 100, sort: "submittedAt,desc" });
+      const filings = result.items || [];
 
       // Placeholder invoice projection from filing status until billing APIs are available.
       const mapped = filings.map((f, index) => {

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { apiRequest } from "@/lib/api";
+import { getClientPatents } from "@/lib/api";
 
 const STATUS_COLOR = {
   DRAFT: "bg-gray-100 text-gray-700",
@@ -26,7 +26,7 @@ export default function DashboardPage() {
     const loadDashboard = async () => {
       setLoading(true);
       setError("");
-      const result = await apiRequest("/api/v1/patents/user/filings?page=0&size=50&sort=submittedAt,desc");
+      const result = await getClientPatents({ page: 0, size: 50, sort: "submittedAt,desc" });
 
       if (!result.ok) {
         setError(result.data?.message || "Unable to load dashboard data.");
@@ -35,8 +35,7 @@ export default function DashboardPage() {
         return;
       }
 
-      const content = result.data?.data?.content;
-      setFilings(Array.isArray(content) ? content : []);
+      setFilings(result.items || []);
       setLoading(false);
     };
 

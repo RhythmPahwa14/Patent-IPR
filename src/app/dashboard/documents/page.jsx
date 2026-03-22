@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { apiRequest } from "@/lib/api";
+import { apiRequest, getClientPatents } from "@/lib/api";
 
 const typeColors = { PDF: "bg-red-100 text-red-600", DOC: "bg-blue-100 text-blue-600", IMG: "bg-green-100 text-green-600" };
 
@@ -30,7 +30,7 @@ export default function DocumentsPage() {
       setLoading(true);
       setError("");
 
-      const result = await apiRequest("/api/v1/patents/user/filings?page=0&size=100&sort=submittedAt,desc");
+      const result = await getClientPatents({ page: 0, size: 100, sort: "submittedAt,desc" });
       if (!result.ok) {
         setError(result.data?.message || "Unable to load documents.");
         setDocs([]);
@@ -38,7 +38,7 @@ export default function DocumentsPage() {
         return;
       }
 
-      const filings = result.data?.data?.content || [];
+      const filings = result.items || [];
 
       const detailed = await Promise.all(
         filings.slice(0, 30).map(async (f) => {

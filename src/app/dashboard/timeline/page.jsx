@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { apiRequest } from "@/lib/api";
+import { getClientPatents } from "@/lib/api";
 
 const STATUS_BADGE = {
   DRAFT: "bg-gray-100 text-gray-700",
@@ -25,7 +25,7 @@ export default function TimelinePage() {
     const loadTimeline = async () => {
       setLoading(true);
       setError("");
-      const result = await apiRequest("/api/v1/patents/user/filings?page=0&size=100&sort=submittedAt,desc");
+      const result = await getClientPatents({ page: 0, size: 100, sort: "submittedAt,desc" });
 
       if (!result.ok) {
         setError(result.data?.message || "Unable to load timeline.");
@@ -34,7 +34,7 @@ export default function TimelinePage() {
         return;
       }
 
-      setFilings(Array.isArray(result.data?.data?.content) ? result.data.data.content : []);
+      setFilings(result.items || []);
       setLoading(false);
     };
 

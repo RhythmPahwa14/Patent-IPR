@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { apiRequest } from "@/lib/api";
+import { getClientPatents } from "@/lib/api";
 
 export default function MessagesPage() {
   const [conversations, setConversations] = useState([]);
@@ -10,8 +10,8 @@ export default function MessagesPage() {
 
   useEffect(() => {
     const loadConversations = async () => {
-      const result = await apiRequest("/api/v1/patents/user/filings?page=0&size=50&sort=submittedAt,desc");
-      const filings = Array.isArray(result.data?.data?.content) ? result.data.data.content : [];
+      const result = await getClientPatents({ page: 0, size: 50, sort: "submittedAt,desc" });
+      const filings = result.items || [];
 
       const seed = filings.map((f) => ({
         id: f.referenceNumber,

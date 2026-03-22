@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { apiRequest } from "@/lib/api";
+import { getClientPatents } from "@/lib/api";
 
 const PAGE_SIZE = 10;
 const statusFilters = ["All", "DRAFT", "PENDING", "APPROVED", "REJECTED"];
@@ -34,17 +34,12 @@ export default function CasesPage() {
       setLoading(true);
       setError("");
 
-      const params = new URLSearchParams({
-        page: String(page),
-        size: String(PAGE_SIZE),
+      const result = await getClientPatents({
+        page,
+        size: PAGE_SIZE,
         sort: "submittedAt,desc",
+        status: activeStatus === "All" ? undefined : activeStatus,
       });
-
-      if (activeStatus !== "All") {
-        params.set("status", activeStatus);
-      }
-
-      const result = await apiRequest(`/api/v1/patents/user/filings?${params.toString()}`);
       if (!result.ok) {
         setError(result.data?.message || "Unable to load your filings.");
         setFilings([]);
@@ -53,13 +48,12 @@ export default function CasesPage() {
         return;
       }
 
-      const payload = result.data?.data || {};
-      setFilings(Array.isArray(payload.content) ? payload.content : []);
+      setFilings(result.items || []);
       setMeta({
-        page: payload.pageable?.page ?? page,
-        size: payload.pageable?.size ?? PAGE_SIZE,
-        totalElements: payload.pageable?.totalElements ?? 0,
-        totalPages: payload.pageable?.totalPages ?? 0,
+        page: result.pagination?.page ?? page,
+        size: result.pagination?.size ?? PAGE_SIZE,
+        totalElements: result.pagination?.totalElements ?? 0,
+        totalPages: result.pagination?.totalPages ?? 0,
       });
       setLoading(false);
     };
