@@ -11,6 +11,11 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const normalizeToken = (tokenValue) => {
+    if (typeof tokenValue !== "string") return "";
+    return tokenValue.replace(/^Bearer\s+/i, "").trim();
+  };
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError("");
@@ -27,10 +32,23 @@ export default function LoginPage() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Invalid credentials");
-      localStorage.setItem("token", data.token);
-      if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
+      if (!res.ok) {
+        const message =
+          data?.message || data?.error || data?.data?.message || "Invalid credentials";
+        throw new Error(message);
+      }
+
+      const payload = data?.data || data;
+      const token = normalizeToken(payload?.token || data?.token);
+      const user = payload?.user || data?.user;
+
+      if (!token) {
+        throw new Error("Login succeeded but token was not returned in expected format.");
+      }
+
+      localStorage.setItem("token", token);
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
       }
       router.push("/dashboard");
     } catch (err) {

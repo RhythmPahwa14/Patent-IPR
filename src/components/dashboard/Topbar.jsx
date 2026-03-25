@@ -6,13 +6,7 @@ import { getStoredUser, getToken } from "@/lib/api";
 
 export default function DashboardTopbar({ title, searchPlaceholder = "Search case numbers, titles, or inventors...", onMenuOpen }) {
   const router = useRouter();
-  const [user] = useState(() => {
-    const storedUser = getStoredUser();
-    return {
-      name: storedUser?.name || "User",
-      role: storedUser?.role || "Client",
-    };
-  });
+  const [user, setUser] = useState({ name: "User", role: "Client" });
 
 
   useEffect(() => {
@@ -20,6 +14,14 @@ export default function DashboardTopbar({ title, searchPlaceholder = "Search cas
     if (!token) {
       router.push("/login");
       return;
+    }
+
+    const storedUser = getStoredUser();
+    if (storedUser) {
+      setUser({
+        name: storedUser.name || "User",
+        role: storedUser.role || "Client",
+      });
     }
 
   }, [router]);

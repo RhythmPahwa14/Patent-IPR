@@ -53,6 +53,28 @@ export default function NewCasePage() {
 
   const handleSubmit = async () => {
     setError("");
+
+    const normalizedMobile = String(form.applicantMobile || "").replace(/\D/g, "");
+
+    const requiredChecks = [
+      [form.title, "Invention title is required."],
+      [form.abstract, "Abstract is required."],
+      [form.applicantName, "Applicant name is required."],
+      [form.applicantEmail, "Applicant email is required."],
+      [form.applicantMobile, "Applicant mobile is required."],
+    ];
+
+    const failed = requiredChecks.find(([value]) => !String(value || "").trim());
+    if (failed) {
+      setError(failed[1]);
+      return;
+    }
+
+    if (normalizedMobile.length < 10) {
+      setError("Applicant mobile must contain at least 10 digits.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -64,14 +86,20 @@ export default function NewCasePage() {
         fieldOfInventionOther: form.fieldOfInventionOther,
         applicantName: form.applicantName,
         applicantEmail: form.applicantEmail,
-        applicantMobile: form.applicantMobile,
+        applicantMobile: normalizedMobile,
         supportingDocument: form.supportingDocument,
       });
 
       if (!result.ok) {
         const data = result.data || {};
         const fieldErrors = data.errors?.map((e) => `${e.field ? e.field + ": " : ""}${e.message}`).join(" | ");
-        const errMsg = fieldErrors || data.message || "Submission failed. Please try again.";
+        const apiMessage = data?.message || data?.error || data?.data?.message || "";
+        const errMsg =
+          fieldErrors ||
+          apiMessage ||
+          (result.status === 401 || result.status === 403
+            ? "Your session is not authorized for filing. Please login with a client account."
+            : "Submission failed. Please try again.");
         setError(errMsg);
         return;
       }

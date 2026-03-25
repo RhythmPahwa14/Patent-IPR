@@ -18,6 +18,11 @@ export default function SignupPage() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
+  const normalizeToken = (tokenValue) => {
+    if (typeof tokenValue !== "string") return "";
+    return tokenValue.replace(/^Bearer\s+/i, "").trim();
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm({ ...form, [name]: type === "checkbox" ? checked : value });
@@ -53,15 +58,23 @@ export default function SignupPage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Registration failed");
+      if (!res.ok) {
+        const message =
+          data?.message || data?.error || data?.data?.message || "Registration failed";
+        throw new Error(message);
+      }
 
-      if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
+      const payload = data?.data || data;
+      const user = payload?.user || data?.user;
+      const token = normalizeToken(payload?.token || data?.token);
+
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
       }
 
       // Register response does not always include token, so route to login if absent.
-      if (data.token) {
-        localStorage.setItem("token", data.token);
+      if (token) {
+        localStorage.setItem("token", token);
         router.push("/dashboard");
       } else {
         router.push("/login");
