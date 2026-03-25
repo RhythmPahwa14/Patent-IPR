@@ -21,7 +21,11 @@ export function buildApiUrl(path = "") {
 
 export function getToken() {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("token");
+  const raw = localStorage.getItem("token");
+  if (!raw) return null;
+
+  const normalized = raw.replace(/^Bearer\s+/i, "").trim();
+  return normalized || null;
 }
 
 export function getStoredUser() {
@@ -165,49 +169,63 @@ export async function getClientPatents({ page = 0, size = 10, status, sort = "su
 }
 
 export async function submitClientPatent(payload = {}) {
-  const primaryBody = {
-    title: payload.title || "",
-    description: payload.abstractText || payload.description || "",
+  const clean = {
+    title: (payload.title || "").trim(),
+    description: (payload.abstractText || payload.description || "").trim(),
+    fieldOfInvention: (payload.fieldOfInvention || "").trim(),
+    fieldOfInventionOther: (payload.fieldOfInventionOther || "").trim(),
+    applicantName: (payload.applicantName || "").trim(),
+    applicantEmail: (payload.applicantEmail || "").trim(),
+    applicantMobile: (payload.applicantMobile || "").replace(/\D/g, "").trim(),
+    supportingDocument: (payload.supportingDocument || "").trim(),
   };
 
-  const primary = await apiRequest("/api/patent/submit", {
-    method: "POST",
-    body: primaryBody,
+  const params = new URLSearchParams({
+    title: clean.title,
+    fieldOfInvention: clean.fieldOfInvention,
+    abstract: clean.description,
+    applicantName: clean.applicantName,
+    applicantEmail: clean.applicantEmail,
+    applicantMobile: clean.applicantMobile,
   });
 
-  if (primary.ok) {
-    return {
-      ok: true,
-      source: "client",
-      data: primary.data,
-      status: primary.status,
-    };
+  if (clean.fieldOfInvention === "Other" && clean.fieldOfInventionOther) {
+    params.set("fieldOfInventionOther", clean.fieldOfInventionOther);
   }
 
-  const params = new URLSearchParams({
-    title: payload.title || "",
-    fieldOfInvention: payload.fieldOfInvention || "",
-    abstract: payload.abstractText || payload.description || "",
-    applicantName: payload.applicantName || "",
-    applicantEmail: payload.applicantEmail || "",
-    applicantMobile: payload.applicantMobile || "",
-  });
-
-  if (payload.fieldOfInvention === "Other" && payload.fieldOfInventionOther) {
-    params.set("fieldOfInventionOther", payload.fieldOfInventionOther);
+  const legacyBody = {};
+  // Legacy contract expects URL string for supportingDocument; avoid posting base64/file blobs.
+  if (/^https?:\/\//i.test(clean.supportingDocument)) {
+    legacyBody.supportingDocument = clean.supportingDocument;
   }
 
   const legacy = await apiRequest(`/api/v1/patents/submit?${params.toString()}`, {
     method: "POST",
+    body: legacyBody,
+  });
+
+  if (legacy.ok || ![404, 405, 501].includes(legacy.status)) {
+    return {
+      ok: legacy.ok,
+      source: "legacy",
+      data: legacy.data,
+      status: legacy.status,
+    };
+  }
+
+  // Optional fallback for deployments that expose the newer submit route.
+  const modern = await apiRequest("/api/patent/submit", {
+    method: "POST",
     body: {
-      supportingDocument: payload.supportingDocument || "",
+      title: clean.title,
+      description: clean.description,
     },
   });
 
   return {
-    ok: legacy.ok,
-    source: "legacy",
-    data: legacy.data,
-    status: legacy.status,
+    ok: modern.ok,
+    source: "client",
+    data: modern.data,
+    status: modern.status,
   };
 }
