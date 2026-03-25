@@ -1,5 +1,5 @@
-﻿"use client";
-import { useEffect, useState } from "react";
+﻿﻿"use client";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 /* ─── Reusable Toggle switch ─── */
@@ -299,7 +299,7 @@ const SERVICES = [
 ];
 
 /* ─── Page ─── */
-export default function CostEstimatorPage() {
+function CostEstimatorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [service, setService] = useState(null);
@@ -358,5 +358,19 @@ export default function CostEstimatorPage() {
       {service === "trademark" && <TrademarkEstimator onBack={() => setService(null)} onStartFiling={handleStartFiling} />}
       {service === "copyright" && <CopyrightEstimator onBack={() => setService(null)} onStartFiling={handleStartFiling} />}
     </div>
+  );
+}
+
+export default function CostEstimatorPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <span className="w-8 h-8 border-4 border-gray-200 border-t-[#0d1b2a] rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <CostEstimatorContent />
+    </Suspense>
   );
 }
