@@ -6,7 +6,7 @@ Modern frontend for intellectual property workflow management, built with Next.j
 - Client dashboard shell (cases, documents, timeline, payments, profile)
 - Auth pages (login, signup)
 - New patent filing flow
-- Floating IPR chatbot widget integrated via a server-side proxy route
+- Floating IPR chatbot widget integrated
 
 ## Tech Stack
 
