@@ -28,6 +28,7 @@ export default function CasesPage() {
   const [meta, setMeta] = useState({ page: 0, size: PAGE_SIZE, totalElements: 0, totalPages: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showFilingPopup, setShowFilingPopup] = useState(false);
 
   useEffect(() => {
     const loadFilings = async () => {
@@ -79,14 +80,72 @@ export default function CasesPage() {
           <h1 className="text-2xl font-bold text-[#0d1b2a]">My Cases</h1>
           <p className="text-sm text-gray-500 mt-0.5">Manage and track all your intellectual property filings.</p>
         </div>
-        <Link
-          href="/dashboard/cases/new"
+        <button
+          type="button"
+          onClick={() => setShowFilingPopup(true)}
           className="flex items-center gap-2 bg-[#0d1b2a] text-white text-sm font-semibold px-4 py-2.5 rounded-lg hover:bg-[#1a2f4a] transition-colors"
         >
           <span className="material-symbols-outlined text-base">add</span>
           New Filing
-        </Link>
+        </button>
       </div>
+
+      {showFilingPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            aria-label="Close filing menu"
+            className="absolute inset-0 bg-[#0d1b2a]/40"
+            onClick={() => setShowFilingPopup(false)}
+          />
+          <div className="relative w-full max-w-xl bg-white rounded-2xl border border-gray-100 p-6 shadow-xl">
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <h2 className="text-xl font-bold text-[#0d1b2a]">Select Filing Type</h2>
+                <p className="text-sm text-gray-500 mt-1">Choose a category to continue with filing.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowFilingPopup(false)}
+                className="text-gray-400 hover:text-[#0d1b2a] transition-colors"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Link
+                href="/dashboard/cases/new"
+                onClick={() => setShowFilingPopup(false)}
+                className="flex items-center justify-center text-sm font-semibold text-[#0d1b2a] border border-gray-200 rounded-xl py-3 hover:border-[#0d1b2a] transition-colors"
+              >
+                Patent
+              </Link>
+              <Link
+                href="/dashboard/cases/new/trademark"
+                onClick={() => setShowFilingPopup(false)}
+                className="flex items-center justify-center text-sm font-semibold text-[#0d1b2a] border border-gray-200 rounded-xl py-3 hover:border-[#0d1b2a] transition-colors"
+              >
+                Trademark
+              </Link>
+              <Link
+                href="/dashboard/cases/new/copyright"
+                onClick={() => setShowFilingPopup(false)}
+                className="flex items-center justify-center text-sm font-semibold text-[#0d1b2a] border border-gray-200 rounded-xl py-3 hover:border-[#0d1b2a] transition-colors"
+              >
+                Copyright
+              </Link>
+              <Link
+                href="/dashboard/cases/new/design"
+                onClick={() => setShowFilingPopup(false)}
+                className="flex items-center justify-center text-sm font-semibold text-[#0d1b2a] border border-gray-200 rounded-xl py-3 hover:border-[#0d1b2a] transition-colors"
+              >
+                Design Registration
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
