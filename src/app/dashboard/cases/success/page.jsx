@@ -9,16 +9,20 @@ function SuccessContent() {
 
   const rawRef = searchParams.get("ref") || "";
   const patentId = searchParams.get("patentId") || "";
+  const type = (searchParams.get("type") || "patent").toLowerCase();
+  const genericId = searchParams.get("id") || "";
+  const genericIdLabel = searchParams.get("idLabel") || "Case ID";
 
   /* ── Format reference number as REQ-PT-{YEAR}-{SEQ} ── */
   const formatRef = (ref) => {
     if (!ref) return null;
-    // If the API already returns the expected format, use it as-is
-    if (/^REQ-PT-\d{4}-\d{3,}$/i.test(ref)) return ref.toUpperCase();
-    return ref; // fallback: show whatever the API returned
+    if (/^REQ-[A-Z]{2}-\d{4}-\d{3,}$/i.test(ref)) return ref.toUpperCase();
+    return ref;
   };
 
-  const displayRef = formatRef(rawRef) || `REQ-PT-${new Date().getFullYear()}-001`;
+  const fallbackPrefix = type === "trademark" ? "TM" : type === "copyright" ? "CR" : type === "design" ? "DR" : "PT";
+  const displayRef = formatRef(rawRef) || `REQ-${fallbackPrefix}-${new Date().getFullYear()}-001`;
+  const filingLabel = type === "trademark" ? "trademark" : type === "copyright" ? "copyright" : type === "design" ? "design" : "patent";
 
   /* ── 10-second auto-redirect ── */
   useEffect(() => {
@@ -46,7 +50,7 @@ function SuccessContent() {
         <div className="space-y-1">
           <h1 className="text-2xl font-bold text-[#0d1b2a]">Filing Submitted!</h1>
           <p className="text-sm text-gray-500">
-            Your patent application has been successfully submitted. Our team will review it shortly.
+            Your {filingLabel} application has been successfully submitted. Our team will review it shortly.
           </p>
         </div>
 
@@ -54,9 +58,9 @@ function SuccessContent() {
         <div className="bg-[#f0f4f8] rounded-xl px-6 py-5 space-y-1">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Reference Number</p>
           <p className="text-2xl font-extrabold text-[#0d1b2a] tracking-wider font-mono">{displayRef}</p>
-          {patentId && (
+          {(patentId || genericId) && (
             <p className="text-xs text-gray-400 mt-1">
-              Patent ID: <span className="font-semibold text-[#0d1b2a]">{patentId}</span>
+              {patentId ? "Patent ID" : genericIdLabel}: <span className="font-semibold text-[#0d1b2a]">{patentId || genericId}</span>
             </p>
           )}
         </div>
@@ -94,7 +98,7 @@ function SuccessContent() {
         {/* Actions */}
         <div className="flex gap-3 pt-1">
           <button
-            onClick={() => router.push("/dashboard/cases/new")}
+            onClick={() => router.push("/dashboard/cases")}
             className="flex-1 border border-gray-200 text-[#0d1b2a] text-sm font-semibold py-2.5 rounded-lg hover:bg-gray-50 transition-colors"
           >
             New Filing

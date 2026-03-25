@@ -1,6 +1,6 @@
 ﻿"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 /* ─── Reusable Toggle switch ─── */
 function Toggle({ checked, onChange }) {
@@ -69,15 +69,15 @@ function InfoBanner({ children }) {
 /* ─── Shared estimator shell ─── */
 function EstimatorShell({ title, onBack, children, total, totalNote, onStartFiling }) {
   return (
-    <div className="max-w-md mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
+    <div className="w-full max-w-3xl mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="flex items-center gap-3 px-5 md:px-7 py-4 border-b border-gray-100">
         <button onClick={onBack} className="text-[#0d1b2a] hover:text-gray-400 transition-colors">
           <span className="material-symbols-outlined text-xl">arrow_back_ios</span>
         </button>
         <h2 className="text-base font-bold text-[#0d1b2a] flex-1">{title}</h2>
       </div>
-      <div className="px-5 pb-4">{children}</div>
-      <div className="border-t border-gray-100 px-5 pt-4 pb-5 bg-white">
+      <div className="px-5 md:px-7 pb-4">{children}</div>
+      <div className="border-t border-gray-100 px-5 md:px-7 pt-4 pb-5 bg-white">
         <div className="flex items-end justify-between mb-3">
           <div>
             <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">Total Estimated Cost</p>
@@ -301,32 +301,50 @@ const SERVICES = [
 /* ─── Page ─── */
 export default function CostEstimatorPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [service, setService] = useState(null);
-  const handleStartFiling = () => router.push("/dashboard/cases/new");
+
+  useEffect(() => {
+    const serviceFromQuery = searchParams.get("service");
+    const validServices = ["patent", "trademark", "copyright", "design"];
+    if (serviceFromQuery && validServices.includes(serviceFromQuery)) {
+      setService(serviceFromQuery);
+    }
+  }, [searchParams]);
+
+  const handleStartFiling = () => {
+    const filingRouteByService = {
+      patent: "/dashboard/cases/new",
+      trademark: "/dashboard/cases/new/trademark",
+      copyright: "/dashboard/cases/new/copyright",
+      design: "/dashboard/cases/new/design",
+    };
+    router.push(filingRouteByService[service] || "/dashboard/cases/new");
+  };
   return (
-    <div className="max-w-2xl mx-auto space-y-5">
+    <div className={`mx-auto space-y-5 ${service ? "max-w-4xl" : "max-w-6xl"}`}>
       {!service && (
         <>
           <div>
             <h1 className="text-2xl font-bold text-[#0d1b2a]">IP Cost Estimator</h1>
             <p className="text-sm text-gray-500 mt-1">Get an instant fee breakdown for your IP filing.</p>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <h2 className="text-xl font-bold text-[#0d1b2a] leading-tight">Which service would you like to estimate?</h2>
-            <p className="text-sm text-gray-400 mt-1 mb-5">Select a category to get an instant fee breakdown for your filing.</p>
-            <div className="space-y-3">
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 lg:p-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#0d1b2a] leading-tight">Which service would you like to estimate?</h2>
+            <p className="text-sm text-gray-400 mt-1 mb-5 sm:mb-6">Select a category to get an instant fee breakdown for your filing.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {SERVICES.map((s) => (
                 <button
                   key={s.key}
                   onClick={() => setService(s.key)}
-                  className="w-full text-left flex items-center gap-4 p-4 border border-gray-100 rounded-xl hover:shadow-sm transition-all group"
+                  className="w-full text-left flex items-center gap-4 p-4 sm:p-5 border border-gray-100 rounded-xl hover:shadow-sm hover:border-gray-200 transition-all group min-h-[108px]"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
                     <span className="material-symbols-outlined text-blue-600 text-2xl">{s.icon}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-[#0d1b2a]">{s.title}</p>
-                    <p className="text-xs text-gray-400 mt-0.5 leading-snug">{s.desc}</p>
+                    <p className="text-sm sm:text-base font-bold text-[#0d1b2a]">{s.title}</p>
+                    <p className="text-xs sm:text-sm text-gray-400 mt-0.5 leading-snug">{s.desc}</p>
                   </div>
                   <span className="material-symbols-outlined text-gray-300 text-xl shrink-0">chevron_right</span>
                 </button>
