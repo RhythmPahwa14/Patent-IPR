@@ -2,8 +2,120 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getEstimatorPrefillForService } from "@/lib/estimatorPrefill";
+import { submitNonPatentFiling } from "@/lib/api";
 
 const steps = ["Case Details", "Applicant Info", "Documents", "Review"];
+const FILE_FALLBACK_PREFIX = "local-file://";
+
+const NON_PATENT_PAYLOAD_KEYS = {
+  trademark: [
+    "trademarkName",
+    "classOfTrademark",
+    "descriptionGoodsServices",
+    "usageStatus",
+    "dateOfFirstUse",
+    "multipleClasses",
+    "colorClaim",
+    "translationTransliteration",
+    "applicantName",
+    "applicantType",
+    "address",
+    "trademarkAgentDetails",
+    "trademarkLogo",
+    "powerOfAttorney",
+    "msmeStartupCertificate",
+  ],
+  copyright: [
+    "workType",
+    "titleOfWork",
+    "authorDetails",
+    "yearOfCreation",
+    "publishedStatus",
+    "dateOfPublication",
+    "publisherDetails",
+    "languageOfWork",
+    "coAuthors",
+    "rightsOwnerDetails",
+    "applicantName",
+    "address",
+    "workFile",
+    "nocUpload",
+  ],
+  design: [
+    "articleName",
+    "locarnoClass",
+    "briefDescription",
+    "priorityDate",
+    "statementOfNovelty",
+    "disclaimer",
+    "applicantName",
+    "address",
+    "agentDetails",
+    "representationOfDesign",
+    "multipleViewsUpload",
+  ],
+};
+
+const NON_PATENT_FILE_FIELDS = {
+  trademark: new Set(["trademarkLogo", "powerOfAttorney", "msmeStartupCertificate"]),
+  copyright: new Set(["workFile", "nocUpload"]),
+  design: new Set(["representationOfDesign", "multipleViewsUpload"]),
+};
+
+function normalizeFieldValue(value, isFileField) {
+  if (Array.isArray(value)) {
+    const normalized = value
+      .map((entry) => {
+        if (typeof File !== "undefined" && entry instanceof File) {
+          return `${FILE_FALLBACK_PREFIX}${entry.name}`;
+        }
+        return String(entry || "").trim();
+      })
+      .filter(Boolean);
+
+    return isFileField ? normalized[0] || "" : normalized;
+  }
+
+  if (typeof File !== "undefined" && value instanceof File) {
+    return `${FILE_FALLBACK_PREFIX}${value.name}`;
+  }
+
+  if (typeof value === "string") return value.trim();
+  return value;
+}
+
+function buildNonPatentPayload(filingType, form) {
+  const type = String(filingType || "").toLowerCase();
+  const keys = NON_PATENT_PAYLOAD_KEYS[type] || [];
+  const fileFields = NON_PATENT_FILE_FIELDS[type] || new Set();
+
+  return keys.reduce((acc, key) => {
+    const normalized = normalizeFieldValue(form[key], fileFields.has(key));
+
+    if (Array.isArray(normalized)) {
+      if (normalized.length > 0) acc[key] = normalized;
+      return acc;
+    }
+
+    if (typeof normalized === "string") {
+      if (normalized) acc[key] = normalized;
+      return acc;
+    }
+
+    if (normalized !== undefined && normalized !== null) {
+      acc[key] = normalized;
+    }
+
+    return acc;
+  }, {});
+}
+
+function getCaseIdFromApiPayload(filingType, payload = {}) {
+  if (filingType === "trademark") return payload.trademarkId || payload.id || "";
+  if (filingType === "copyright") return payload.copyrightId || payload.id || "";
+  if (filingType === "design") return payload.designId || payload.id || "";
+  return payload.id || "";
+}
 
 export default function GenericFilingForm({
   filingType,
@@ -284,16 +396,43 @@ export default function GenericFilingForm({
 
     try {
       setSubmitting(true);
-      await new Promise((resolve) => setTimeout(resolve, 650));
-      const year = new Date().getFullYear();
-      const sequence = String(Math.floor(100 + Math.random() * 900));
-      const ref = `REQ-${referencePrefix}-${year}-${sequence}`;
-      const generatedId = `${referencePrefix}-${Date.now().toString().slice(-6)}`;
+
+      const result = await submitNonPatentFiling(
+        filingType,
+        buildNonPatentPayload(filingType, form)
+      );
+
+      if (!result.ok) {
+        const data = result.data || {};
+        const formattedFieldErrors = Array.isArray(data.errors)
+          ? data.errors
+              .map((item) => `${item.field ? `${item.field}: ` : ""}${item.message}`)
+              .join(" | ")
+          : "";
+        const apiMessage = data?.message || data?.error || data?.data?.message || "";
+
+        const finalMessage =
+          formattedFieldErrors ||
+          apiMessage ||
+          (result.status === 401 || result.status === 403
+            ? "Your session is not authorized for filing. Please login with a client account."
+            : "Submission failed. Please try again.");
+
+        setError(finalMessage);
+        return;
+      }
+
+      const responsePayload = result.data?.data || result.data || {};
+      const referenceNumber = encodeURIComponent(responsePayload.referenceNumber || "");
+      const caseId = encodeURIComponent(getCaseIdFromApiPayload(filingType, responsePayload));
+      const encodedType = encodeURIComponent(filingType);
+      const encodedIdLabel = encodeURIComponent(caseIdLabel || `${referencePrefix} ID`);
+
       router.push(
-        `/dashboard/cases/success?ref=${encodeURIComponent(ref)}&type=${encodeURIComponent(filingType)}&id=${encodeURIComponent(generatedId)}&idLabel=${encodeURIComponent(caseIdLabel)}`
+        `/dashboard/cases/success?ref=${referenceNumber}&type=${encodedType}&id=${caseId}&idLabel=${encodedIdLabel}`
       );
     } catch {
-      setError("Submission failed. Please try again.");
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setSubmitting(false);
     }

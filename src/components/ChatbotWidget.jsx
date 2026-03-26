@@ -135,7 +135,7 @@ export default function ChatbotWidget() {
           className="h-14 px-5 rounded-full bg-[#060f1a] text-white shadow-[0_14px_30px_rgba(6,15,26,0.35)] text-sm font-semibold tracking-wide hover:bg-[#0d1b2a]"
           aria-label="Open IPR chatbot"
         >
-          Chat with IPR Assistant
+          <span className="material-symbols-outlined text-base align-middle">smart_toy</span>
         </button>
       )}
     </div>

@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { getClientPatents, getPatentByReference } from "@/lib/api";
+import { getClientFilings, getFilingByReference } from "@/lib/api";
 
 const STATUS_STYLES = {
   DRAFT: "text-gray-700 border-gray-300 bg-gray-100",
@@ -37,7 +37,7 @@ export default function CaseDetailPage() {
       setLoading(true);
       setError("");
 
-      const clientList = await getClientPatents({ page: 0, size: 200, sort: "submittedAt,desc" });
+      const clientList = await getClientFilings({ page: 0, size: 200, sort: "submittedAt,desc" });
       if (clientList.ok) {
         const found = (clientList.items || []).find((p) => p.referenceNumber === referenceNumber);
         if (found) {
@@ -47,9 +47,9 @@ export default function CaseDetailPage() {
         }
       }
 
-      const result = await getPatentByReference(referenceNumber);
+      const result = await getFilingByReference(referenceNumber);
       if (!result.ok) {
-        setError(result.data?.message || "Unable to load patent details.");
+        setError(result.data?.message || "Unable to load filing details.");
         setFiling(null);
         setLoading(false);
         return;
@@ -127,12 +127,12 @@ export default function CaseDetailPage() {
               <span className={`text-[10px] font-bold tracking-widest border px-2 py-0.5 rounded ${statusClass}`}>
                 {filing.status || "-"}
               </span>
-              <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">PATENT FILING</span>
+              <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">{filing.typeLabel || "FILING"}</span>
             </div>
             <h1 className="text-xl font-bold text-[#0d1b2a]">{filing.title || "Untitled Filing"}</h1>
             <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-gray-500">
               <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">tag</span>{filing.referenceNumber || "-"}</span>
-              <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">fingerprint</span>{filing.patentId || "-"}</span>
+              <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">fingerprint</span>{filing.typeId || filing.patentId || "-"}</span>
               <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">calendar_today</span>{formatDate(filing.submittedAt)}</span>
             </div>
           </div>
@@ -170,10 +170,10 @@ export default function CaseDetailPage() {
 
         <div className="space-y-5">
           <div className="bg-white rounded-xl border border-gray-100 p-5">
-            <h3 className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-4">Invention Summary</h3>
+            <h3 className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-4">Case Summary</h3>
             <div className="space-y-3">
               <div>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider">Field of Invention</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider">Category</p>
                 <p className="text-sm font-semibold text-[#0d1b2a] mt-0.5">{filing.fieldOfInvention || "-"}</p>
               </div>
               {filing.fieldOfInventionOther && (
@@ -190,8 +190,8 @@ export default function CaseDetailPage() {
           </div>
 
           <div className="bg-white rounded-xl border border-gray-100 p-5">
-            <h3 className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-4">Abstract</h3>
-            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{filing.abstractText || "No abstract available."}</p>
+            <h3 className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-4">Description</h3>
+            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{filing.abstractText || "No description available."}</p>
           </div>
 
           <div className="bg-[#0d1b2a] rounded-xl p-5 text-white">
@@ -204,10 +204,10 @@ export default function CaseDetailPage() {
                 className="inline-flex items-center gap-2 bg-[#f5a623] text-[#0d1b2a] text-xs font-bold px-4 py-2.5 rounded-lg hover:bg-[#e09610] transition-colors"
               >
                 <span className="material-symbols-outlined text-sm">download</span>
-                Open Supporting Document
+                Open Attachment
               </a>
             ) : (
-              <p className="text-xs text-white/70">No supporting document URL available.</p>
+              <p className="text-xs text-white/70">No attachment URL available.</p>
             )}
           </div>
         </div>

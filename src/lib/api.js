@@ -264,3 +264,333 @@ export async function getPatentByReference(referenceNumber = "") {
     raw: legacy.data,
   };
 }
+
+const NON_PATENT_FILING_ENDPOINTS = {
+  trademark: "/api/trademark-filings",
+  copyright: "/api/copyright-filings",
+  design: "/api/design-filings",
+};
+
+export async function submitNonPatentFiling(filingType = "", payload = {}) {
+  const type = String(filingType || "").trim().toLowerCase();
+  const endpoint = NON_PATENT_FILING_ENDPOINTS[type];
+
+  if (!endpoint) {
+    return {
+      ok: false,
+      source: "none",
+      status: 400,
+      data: { message: `Unsupported filing type: ${filingType}` },
+    };
+  }
+
+  const body = Object.entries(payload || {}).reduce((acc, [key, value]) => {
+    if (value === undefined || value === null) return acc;
+
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (!trimmed) return acc;
+      acc[key] = trimmed;
+      return acc;
+    }
+
+    if (Array.isArray(value)) {
+      if (value.length === 0) return acc;
+      acc[key] = value;
+      return acc;
+    }
+
+    acc[key] = value;
+    return acc;
+  }, {});
+
+  body.saveAsDraft = false;
+
+  const response = await apiRequest(endpoint, {
+    method: "POST",
+    body,
+  });
+
+  return {
+    ok: response.ok,
+    source: type,
+    data: response.data,
+    status: response.status,
+  };
+}
+
+const NON_PATENT_LIST_ENDPOINTS = {
+  trademark: "/api/client/trademark-filings",
+  copyright: "/api/client/copyright-filings",
+  design: "/api/client/design-filings",
+};
+
+const NON_PATENT_DETAIL_ENDPOINTS = {
+  trademark: "/api/trademark-filings",
+  copyright: "/api/copyright-filings",
+  design: "/api/design-filings",
+};
+
+function normalizeTrademark(item = {}) {
+  return {
+    id: item.id || item.trademarkId || item.referenceNumber || "",
+    referenceNumber: item.referenceNumber || item.referenceNo || "",
+    patentId: item.trademarkId || item.id || "",
+    title: item.trademarkName || item.title || "",
+    fieldOfInvention: item.classOfTrademark || "Trademark",
+    fieldOfInventionOther: item.colorClaim || "",
+    abstractText: item.descriptionGoodsServices || item.description || "",
+    supportingDocumentUrl: item.trademarkLogo || item.supportingDocumentUrl || "",
+    applicantName: item.applicantName || "",
+    applicantEmail: item.applicantEmail || "",
+    applicantMobile: item.applicantMobile || "",
+    status: item.status || "",
+    submittedAt: item.submittedAt || item.createdAt || null,
+    updatedAt: item.updatedAt || item.createdAt || null,
+    filingType: "trademark",
+    typeLabel: "TRADEMARK FILING",
+    typeId: item.trademarkId || item.id || "",
+    typeIdLabel: "Trademark ID",
+  };
+}
+
+function normalizeCopyright(item = {}) {
+  const authorText =
+    typeof item.authorDetails === "string"
+      ? item.authorDetails
+      : item.authorDetails?.name || "";
+
+  return {
+    id: item.id || item.copyrightId || item.referenceNumber || "",
+    referenceNumber: item.referenceNumber || item.referenceNo || "",
+    patentId: item.copyrightId || item.id || "",
+    title: item.titleOfWork || item.title || "",
+    fieldOfInvention: item.workType || "Copyright",
+    fieldOfInventionOther: item.languageOfWork || "",
+    abstractText: item.briefDescription || authorText || "",
+    supportingDocumentUrl: item.workFile || item.supportingDocumentUrl || "",
+    applicantName: item.applicantName || "",
+    applicantEmail: item.applicantEmail || "",
+    applicantMobile: item.applicantMobile || "",
+    status: item.status || "",
+    submittedAt: item.submittedAt || item.createdAt || null,
+    updatedAt: item.updatedAt || item.createdAt || null,
+    filingType: "copyright",
+    typeLabel: "COPYRIGHT FILING",
+    typeId: item.copyrightId || item.id || "",
+    typeIdLabel: "Copyright ID",
+  };
+}
+
+function normalizeDesign(item = {}) {
+  return {
+    id: item.id || item.designId || item.referenceNumber || "",
+    referenceNumber: item.referenceNumber || item.referenceNo || "",
+    patentId: item.designId || item.id || "",
+    title: item.articleName || item.title || "",
+    fieldOfInvention: item.locarnoClass || "Design",
+    fieldOfInventionOther: item.statementOfNovelty || "",
+    abstractText: item.briefDescription || item.description || "",
+    supportingDocumentUrl: item.representationOfDesign || item.supportingDocumentUrl || "",
+    applicantName: item.applicantName || "",
+    applicantEmail: item.applicantEmail || "",
+    applicantMobile: item.applicantMobile || "",
+    status: item.status || "",
+    submittedAt: item.submittedAt || item.createdAt || null,
+    updatedAt: item.updatedAt || item.createdAt || null,
+    filingType: "design",
+    typeLabel: "DESIGN FILING",
+    typeId: item.designId || item.id || "",
+    typeIdLabel: "Design ID",
+  };
+}
+
+function normalizeFilingByType(type, item = {}) {
+  if (type === "trademark") return normalizeTrademark(item);
+  if (type === "copyright") return normalizeCopyright(item);
+  if (type === "design") return normalizeDesign(item);
+
+  return {
+    ...normalizePatent(item),
+    filingType: "patent",
+    typeLabel: "PATENT FILING",
+    typeId: item.patentId || item.id || "",
+    typeIdLabel: "Patent ID",
+  };
+}
+
+function sortFilings(items = [], sort = "submittedAt,desc") {
+  const [fieldRaw, directionRaw] = String(sort || "submittedAt,desc").split(",");
+  const field = (fieldRaw || "submittedAt").trim();
+  const dir = String(directionRaw || "desc").trim().toLowerCase() === "asc" ? 1 : -1;
+
+  return [...items].sort((a, b) => {
+    const left = a?.[field] ?? "";
+    const right = b?.[field] ?? "";
+
+    if (field.toLowerCase().includes("at") || field.toLowerCase().includes("date")) {
+      const leftTime = left ? new Date(left).getTime() : 0;
+      const rightTime = right ? new Date(right).getTime() : 0;
+      return (leftTime - rightTime) * dir;
+    }
+
+    if (typeof left === "number" && typeof right === "number") {
+      return (left - right) * dir;
+    }
+
+    return String(left).localeCompare(String(right)) * dir;
+  });
+}
+
+async function getClientNonPatentFilings(type, { page = 0, size = 10, status, sort = "submittedAt,desc" } = {}) {
+  const endpoint = NON_PATENT_LIST_ENDPOINTS[type];
+  if (!endpoint) {
+    return { ok: false, items: [], status: 400, data: { message: `Unsupported filing type: ${type}` } };
+  }
+
+  const params = new URLSearchParams({
+    page: String(page),
+    size: String(size),
+    sort,
+  });
+  if (status) params.set("status", status);
+
+  const response = await apiRequest(`${endpoint}?${params.toString()}`, { method: "GET" });
+  if (!response.ok) {
+    return {
+      ok: false,
+      items: [],
+      status: response.status,
+      data: response.data,
+      pagination: {
+        page,
+        size,
+        totalElements: 0,
+        totalPages: 0,
+      },
+    };
+  }
+
+  const payload = response.data?.data || {};
+  const list = extractPatentArray(response.data).map((item) => normalizeFilingByType(type, item));
+
+  return {
+    ok: true,
+    items: list,
+    status: response.status,
+    data: response.data,
+    pagination: {
+      page: payload.pageable?.page ?? page,
+      size: payload.pageable?.size ?? size,
+      totalElements: payload.pageable?.totalElements ?? list.length,
+      totalPages: payload.pageable?.totalPages ?? (list.length > 0 ? 1 : 0),
+    },
+  };
+}
+
+export async function getClientFilings({ page = 0, size = 10, status, sort = "submittedAt,desc" } = {}) {
+  const fetchSize = Math.max((page + 1) * size, 100);
+
+  const [patents, trademark, copyright, design] = await Promise.all([
+    getClientPatents({ page: 0, size: fetchSize, status, sort }),
+    getClientNonPatentFilings("trademark", { page: 0, size: fetchSize, status, sort }),
+    getClientNonPatentFilings("copyright", { page: 0, size: fetchSize, status, sort }),
+    getClientNonPatentFilings("design", { page: 0, size: fetchSize, status, sort }),
+  ]);
+
+  const successfulResults = [patents, trademark, copyright, design].filter((result) => result.ok);
+  if (successfulResults.length === 0) {
+    const firstFailed = patents || trademark || copyright || design;
+    return {
+      ok: false,
+      source: "combined",
+      items: [],
+      pagination: {
+        page,
+        size,
+        totalElements: 0,
+        totalPages: 0,
+      },
+      status: firstFailed?.status || 500,
+      data: firstFailed?.data || null,
+    };
+  }
+
+  const combined = sortFilings(
+    [
+      ...(patents.items || []).map((item) => normalizeFilingByType("patent", item)),
+      ...(trademark.items || []),
+      ...(copyright.items || []),
+      ...(design.items || []),
+    ],
+    sort
+  );
+
+  const start = page * size;
+  const end = start + size;
+  const paged = combined.slice(start, end);
+
+  return {
+    ok: true,
+    source: "combined",
+    items: paged,
+    pagination: {
+      page,
+      size,
+      totalElements: combined.length,
+      totalPages: Math.ceil(combined.length / size),
+    },
+    data: {
+      data: {
+        content: paged,
+        pageable: {
+          page,
+          size,
+          totalElements: combined.length,
+          totalPages: Math.ceil(combined.length / size),
+        },
+      },
+    },
+  };
+}
+
+export async function getFilingByReference(referenceNumber = "") {
+  const ref = String(referenceNumber || "").trim();
+  if (!ref) {
+    return { ok: false, source: "none", data: null, status: 400 };
+  }
+
+  const patent = await getPatentByReference(ref);
+  if (patent.ok) {
+    return {
+      ok: true,
+      source: "patent",
+      data: normalizeFilingByType("patent", patent.data || {}),
+      status: patent.status,
+      raw: patent.raw,
+    };
+  }
+
+  const encodedRef = encodeURIComponent(ref);
+  for (const type of ["trademark", "copyright", "design"]) {
+    const endpoint = NON_PATENT_DETAIL_ENDPOINTS[type];
+    const response = await apiRequest(`${endpoint}/${encodedRef}`, { method: "GET" });
+    if (!response.ok) continue;
+
+    const payload = response.data?.data || response.data || {};
+    return {
+      ok: true,
+      source: type,
+      data: normalizeFilingByType(type, payload),
+      status: response.status,
+      raw: response.data,
+    };
+  }
+
+  return {
+    ok: false,
+    source: "combined",
+    data: patent.data,
+    status: patent.status || 404,
+  };
+}
