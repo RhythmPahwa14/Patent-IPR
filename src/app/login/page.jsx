@@ -52,7 +52,13 @@ export default function LoginPage() {
       }
 
       const role = String(user?.role || "").toLowerCase();
-      router.push(role === "agent" ? "/agent" : "/dashboard");
+      if (role === "admin") {
+        router.push("/admin");
+      } else if (role === "agent") {
+        router.push("/agent");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err) {
       setError(err.message);
     } finally {
