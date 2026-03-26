@@ -115,7 +115,7 @@ export default function CasesPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Link
-                href="/dashboard/cases/new"
+                href="/dashboard/cases/new/patent"
                 onClick={() => setShowFilingPopup(false)}
                 className="flex items-center justify-center text-sm font-semibold text-[#0d1b2a] border border-gray-200 rounded-xl py-3 hover:border-[#0d1b2a] transition-colors"
               >

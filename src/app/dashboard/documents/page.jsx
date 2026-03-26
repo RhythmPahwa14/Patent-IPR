@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { apiRequest, getClientPatents } from "@/lib/api";
+import { getClientPatents, getPatentByReference } from "@/lib/api";
 
 const typeColors = { PDF: "bg-red-100 text-red-600", DOC: "bg-blue-100 text-blue-600", IMG: "bg-green-100 text-green-600" };
 
@@ -44,9 +44,9 @@ export default function DocumentsPage() {
         filings.slice(0, 30).map(async (f) => {
           const ref = f.referenceNumber;
           if (!ref) return null;
-          const detailResult = await apiRequest(`/api/v1/patents/${encodeURIComponent(ref)}`);
+          const detailResult = await getPatentByReference(ref);
           if (!detailResult.ok) return null;
-          return detailResult.data?.data || null;
+          return detailResult.data || null;
         })
       );
 

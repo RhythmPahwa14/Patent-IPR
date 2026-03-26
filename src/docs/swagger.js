@@ -10,8 +10,8 @@ const openApiSpec = {
   },
   servers: [
     {
-      url: "/",
-      description: "Current server",
+      url: "https://express-backend-ajedhzd3h0bfbse5.westindia-01.azurewebsites.net",
+      description: "Azure production server",
     },
   ],
   tags: [

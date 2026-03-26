@@ -1,6 +1,7 @@
 ﻿﻿"use client";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { saveEstimatorPrefill } from "@/lib/estimatorPrefill";
 
 /* ─── Reusable Toggle switch ─── */
 function Toggle({ checked, onChange }) {
@@ -107,8 +108,26 @@ function PatentEstimator({ onBack, onStartFiling }) {
   const [opts, setOpts] = useState({ drafting: false, priorArt: false, earlyPub: false, expedited: false });
   const toggle = (k) => setOpts((o) => ({ ...o, [k]: !o[k] }));
   const total = BASE + Object.entries(opts).reduce((sum, [k, v]) => sum + (v ? OPT[k] : 0), 0);
+  const handleStart = () => {
+    const selectedOptions = [];
+    if (opts.drafting) selectedOptions.push("Patent Drafting");
+    if (opts.priorArt) selectedOptions.push("Prior Art Search");
+    if (opts.earlyPub) selectedOptions.push("Early Publication");
+    if (opts.expedited) selectedOptions.push("Expedited Examination");
+
+    onStartFiling({
+      service: "patent",
+      total,
+      selections: [
+        "Entity Type: Individual / Startup / Small Entity",
+        ...selectedOptions.map((option) => `Add-on: ${option}`),
+      ],
+      defaults: {},
+    });
+  };
+
   return (
-    <EstimatorShell title="Patent Cost Estimator" onBack={onBack} total={`₹${total.toLocaleString("en-IN")}`} onStartFiling={onStartFiling}>
+    <EstimatorShell title="Patent Cost Estimator" onBack={onBack} total={`₹${total.toLocaleString("en-IN")}`} onStartFiling={handleStart}>
       <div className="pt-4">
         <InfoBanner>Applicable for Individuals / Startups / Small Entities</InfoBanner>
         <SectionLabel>Fixed Statutory Fees</SectionLabel>
@@ -141,8 +160,20 @@ function DesignEstimator({ onBack, onStartFiling }) {
   const DRAWINGS_ADD = 2500;
   const [drawings, setDrawings] = useState(false);
   const total = BASE + (drawings ? DRAWINGS_ADD : 0);
+  const handleStart = () => {
+    onStartFiling({
+      service: "design",
+      total,
+      selections: [
+        "Entity Type: Individual / Startup / Small Entity",
+        drawings ? "3D Drawings Support: Yes" : "3D Drawings Support: No",
+      ],
+      defaults: {},
+    });
+  };
+
   return (
-    <EstimatorShell title="Design Registration Estimator" onBack={onBack} total={`₹${total.toLocaleString("en-IN")}`} onStartFiling={onStartFiling}>
+    <EstimatorShell title="Design Registration Estimator" onBack={onBack} total={`₹${total.toLocaleString("en-IN")}`} onStartFiling={handleStart}>
       <div className="pt-4">
         <InfoBanner>Applicable for Individuals / Startups / Small Entities</InfoBanner>
         <SectionLabel>Entity Type</SectionLabel>
@@ -177,13 +208,30 @@ function TrademarkEstimator({ onBack, onStartFiling }) {
   const govFee = CLASS_GOV * classes;
   const optTotal = Object.entries(opts).reduce((s, [k, v]) => s + (v ? OPT[k] : 0), 0);
   const total = govFee + PROFESSIONAL + optTotal;
+  const handleStart = () => {
+    const selectedOptions = [];
+    if (opts.preFiling) selectedOptions.push("Pre-filing Search");
+    if (opts.logoDesign) selectedOptions.push("Logo Design");
+    if (opts.expedited) selectedOptions.push("Expedited Processing");
+
+    onStartFiling({
+      service: "trademark",
+      total,
+      selections: [
+        `Classes selected: ${classes}`,
+        ...selectedOptions.map((option) => `Add-on: ${option}`),
+      ],
+      defaults: {},
+    });
+  };
+
   return (
     <EstimatorShell
       title="Trademark Estimator"
       onBack={onBack}
       total={`₹${total.toLocaleString("en-IN")}`}
       totalNote={`Includes ${classes} Class${classes > 1 ? "es" : ""}`}
-      onStartFiling={onStartFiling}
+      onStartFiling={handleStart}
     >
       <div className="pt-4">
         <h3 className="text-xl font-bold text-[#0d1b2a]">Estimate Filing Cost</h3>
@@ -241,13 +289,33 @@ function CopyrightEstimator({ onBack, onStartFiling }) {
   const [expedited, setExpedited] = useState(false);
   const total = GOV + PROFESSIONAL + (expedited ? EXPEDITED_COST : 0);
   const selectedWork = WORK_TYPES.find((w) => w.key === workType);
+  const workTypeDefaults = {
+    literary: "Literary",
+    artistic: "Artistic",
+    musical: "Music",
+    film: "Cinematograph Film",
+  };
+  const handleStart = () => {
+    onStartFiling({
+      service: "copyright",
+      total,
+      selections: [
+        `Work Type: ${selectedWork?.label || "Literary / Dramatic"}`,
+        expedited ? "Expedited Registration: Yes" : "Expedited Registration: No",
+      ],
+      defaults: {
+        workType: workTypeDefaults[workType] || "Literary",
+      },
+    });
+  };
+
   return (
     <EstimatorShell
       title="Copyright Estimator"
       onBack={onBack}
       total={`₹${total.toLocaleString("en-IN")}`}
       totalNote={`Includes ${selectedWork?.label || "Literary Work"}`}
-      onStartFiling={onStartFiling}
+      onStartFiling={handleStart}
     >
       <div className="pt-4">
         <h3 className="text-xl font-bold text-[#0d1b2a]">Estimate Copyright Cost</h3>
@@ -302,19 +370,25 @@ const SERVICES = [
 function CostEstimatorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [service, setService] = useState(null);
+  const serviceFromQuery = searchParams.get("service");
+  const validServices = new Set(["patent", "trademark", "copyright", "design"]);
+  const service = validServices.has(serviceFromQuery) ? serviceFromQuery : null;
 
-  useEffect(() => {
-    const serviceFromQuery = searchParams.get("service");
-    const validServices = ["patent", "trademark", "copyright", "design"];
-    if (serviceFromQuery && validServices.includes(serviceFromQuery)) {
-      setService(serviceFromQuery);
+  const openEstimator = (serviceKey) => {
+    router.push(`/dashboard/cost-estimator?service=${serviceKey}`);
+  };
+
+  const goToEstimatorChooser = () => {
+    router.push("/dashboard/cost-estimator");
+  };
+
+  const handleStartFiling = (prefillData) => {
+    if (prefillData?.service) {
+      saveEstimatorPrefill(prefillData);
     }
-  }, [searchParams]);
 
-  const handleStartFiling = () => {
     const filingRouteByService = {
-      patent: "/dashboard/cases/new",
+      patent: "/dashboard/cases/new/patent",
       trademark: "/dashboard/cases/new/trademark",
       copyright: "/dashboard/cases/new/copyright",
       design: "/dashboard/cases/new/design",
@@ -336,7 +410,7 @@ function CostEstimatorContent() {
               {SERVICES.map((s) => (
                 <button
                   key={s.key}
-                  onClick={() => setService(s.key)}
+                  onClick={() => openEstimator(s.key)}
                   className="w-full text-left flex items-center gap-4 p-4 sm:p-5 border border-gray-100 rounded-xl hover:shadow-sm hover:border-gray-200 transition-all group min-h-[108px]"
                 >
                   <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
@@ -353,10 +427,10 @@ function CostEstimatorContent() {
           </div>
         </>
       )}
-      {service === "patent"    && <PatentEstimator    onBack={() => setService(null)} onStartFiling={handleStartFiling} />}
-      {service === "design"    && <DesignEstimator    onBack={() => setService(null)} onStartFiling={handleStartFiling} />}
-      {service === "trademark" && <TrademarkEstimator onBack={() => setService(null)} onStartFiling={handleStartFiling} />}
-      {service === "copyright" && <CopyrightEstimator onBack={() => setService(null)} onStartFiling={handleStartFiling} />}
+      {service === "patent"    && <PatentEstimator    onBack={goToEstimatorChooser} onStartFiling={handleStartFiling} />}
+      {service === "design"    && <DesignEstimator    onBack={goToEstimatorChooser} onStartFiling={handleStartFiling} />}
+      {service === "trademark" && <TrademarkEstimator onBack={goToEstimatorChooser} onStartFiling={handleStartFiling} />}
+      {service === "copyright" && <CopyrightEstimator onBack={goToEstimatorChooser} onStartFiling={handleStartFiling} />}
     </div>
   );
 }

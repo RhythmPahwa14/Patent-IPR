@@ -1,6 +1,7 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { getEstimatorPrefillForService } from "@/lib/estimatorPrefill";
 
 const steps = ["Case Details", "Applicant Info", "Documents", "Review"];
 
@@ -18,6 +19,8 @@ export default function GenericFilingForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
+  const [estimatorPrefill, setEstimatorPrefill] = useState(null);
+  const prefillAppliedRef = useRef(false);
 
   const allFields = [
     ...(sections?.details?.required || []),
@@ -43,6 +46,20 @@ export default function GenericFilingForm({
 
   const [form, setForm] = useState(initialValues);
   const [fileNames, setFileNames] = useState({});
+
+  useEffect(() => {
+    const prefill = getEstimatorPrefillForService(filingType);
+    setEstimatorPrefill(prefill);
+  }, [filingType]);
+
+  useEffect(() => {
+    if (!estimatorPrefill || prefillAppliedRef.current) return;
+    const defaults = estimatorPrefill.defaults || {};
+    if (Object.keys(defaults).length > 0) {
+      setForm((prev) => ({ ...prev, ...defaults }));
+    }
+    prefillAppliedRef.current = true;
+  }, [estimatorPrefill]);
 
   const handle = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -275,7 +292,7 @@ export default function GenericFilingForm({
       router.push(
         `/dashboard/cases/success?ref=${encodeURIComponent(ref)}&type=${encodeURIComponent(filingType)}&id=${encodeURIComponent(generatedId)}&idLabel=${encodeURIComponent(caseIdLabel)}`
       );
-    } catch (submitErr) {
+    } catch {
       setError("Submission failed. Please try again.");
     } finally {
       setSubmitting(false);
@@ -291,14 +308,10 @@ export default function GenericFilingForm({
       ? sections?.documents?.required || []
       : [];
 
-  const currentStepOptional =
-    step === 0
-      ? sections?.details?.optional || []
-      : step === 1
-      ? sections?.applicant?.optional || []
-      : step === 2
-      ? sections?.documents?.optional || []
-      : [];
+  const estimatorTotalDisplay =
+    typeof estimatorPrefill?.total === "number"
+      ? `INR ${estimatorPrefill.total.toLocaleString("en-IN")}`
+      : null;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -306,6 +319,22 @@ export default function GenericFilingForm({
         <h1 className="text-2xl font-bold text-[#0d1b2a]">{heading}</h1>
         <p className="text-sm text-gray-500 mt-0.5">{subheading}</p>
       </div>
+
+      {estimatorPrefill && (
+        <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+          <p className="text-xs font-bold tracking-widest text-blue-500 uppercase">Cost Estimator Data Added</p>
+          {estimatorTotalDisplay && (
+            <p className="text-base font-semibold text-[#0d1b2a] mt-1">Estimated Total: {estimatorTotalDisplay}</p>
+          )}
+          {Array.isArray(estimatorPrefill.selections) && estimatorPrefill.selections.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {estimatorPrefill.selections.map((entry) => (
+                <p key={entry} className="text-xs text-[#0d1b2a]">- {entry}</p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center gap-2">
         {steps.map((label, index) => (

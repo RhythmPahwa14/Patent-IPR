@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { apiRequest, getClientPatents } from "@/lib/api";
+import { getClientPatents, getPatentByReference } from "@/lib/api";
 
 const STATUS_STYLES = {
   DRAFT: "text-gray-700 border-gray-300 bg-gray-100",
@@ -47,7 +47,7 @@ export default function CaseDetailPage() {
         }
       }
 
-      const result = await apiRequest(`/api/v1/patents/${encodeURIComponent(referenceNumber)}`);
+      const result = await getPatentByReference(referenceNumber);
       if (!result.ok) {
         setError(result.data?.message || "Unable to load patent details.");
         setFiling(null);
@@ -55,7 +55,7 @@ export default function CaseDetailPage() {
         return;
       }
 
-      setFiling(result.data?.data || null);
+      setFiling(result.data || null);
       setLoading(false);
     };
 
