@@ -50,7 +50,9 @@ export default function LoginPage() {
       if (user) {
         localStorage.setItem("user", JSON.stringify(user));
       }
-      router.push("/dashboard");
+
+      const role = String(user?.role || "").toLowerCase();
+      router.push(role === "agent" ? "/agent" : "/dashboard");
     } catch (err) {
       setError(err.message);
     } finally {

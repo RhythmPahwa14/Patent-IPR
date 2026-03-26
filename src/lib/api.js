@@ -180,6 +180,49 @@ export async function getClientPatents({ page = 0, size = 10, status, sort = "su
   };
 }
 
+export async function getAgentPatents() {
+  const response = await apiRequest("/api/agent/patents", { method: "GET" });
+  if (!response.ok) {
+    return {
+      ok: false,
+      items: [],
+      status: response.status,
+      data: response.data,
+    };
+  }
+
+  const list = extractPatentArray(response.data).map(normalizePatent);
+  return {
+    ok: true,
+    items: list,
+    status: response.status,
+    data: response.data,
+  };
+}
+
+export async function updateAgentPatentStatus(patentId = "", status = "") {
+  const id = String(patentId || "").trim();
+  const nextStatus = String(status || "").trim().toUpperCase();
+  if (!id || !nextStatus) {
+    return {
+      ok: false,
+      status: 400,
+      data: { message: "Patent ID and status are required." },
+    };
+  }
+
+  const response = await apiRequest(`/api/agent/patent/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body: { status: nextStatus },
+  });
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data: response.data,
+  };
+}
+
 export async function submitClientPatent(payload = {}) {
   const clean = {
     title: (payload.title || "").trim(),
