@@ -1,4 +1,4 @@
-const FALLBACK_API_BASE = "https://patent-ipr-backend-express.onrender.com";
+const FALLBACK_API_BASE = "https://express-backend-ajedhzd3h0bfbse5.westindia-01.azurewebsites.net";
 const PROXY_BASE = "/backend";
 
 const resolveApiBase = () => {
