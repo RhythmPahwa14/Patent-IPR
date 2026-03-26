@@ -264,7 +264,14 @@ export default function SignupPage() {
       if (token) {
         localStorage.setItem("token", token);
         setSuccess("Account created successfully. Redirecting to dashboard...");
-        router.push("/dashboard");
+        const role = String(user?.role || form.role || "").toLowerCase();
+        if (role === "admin") {
+          router.push("/admin");
+        } else if (role === "agent") {
+          router.push("/agent");
+        } else {
+          router.push("/dashboard");
+        }
       } else {
         setSuccess("Account created successfully. Redirecting to login...");
         router.push("/login");

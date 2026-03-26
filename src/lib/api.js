@@ -200,6 +200,180 @@ export async function getAgentPatents() {
   };
 }
 
+function normalizeAdminFiling(item = {}) {
+  return {
+    id: item.id || item.filingId || item.referenceNumber || "",
+    referenceNumber: item.referenceNumber || item.referenceNo || "",
+    title: item.title || item.name || "",
+    type: item.type || item.filingType || "",
+    status: item.status || "",
+    applicantName: item.applicantName || "",
+    assignedAgentId: item.assignedAgentId || item.agentId || null,
+    assignedAgentName: item.assignedAgentName || item.agentName || "",
+    submittedAt: item.submittedAt || item.createdAt || null,
+    updatedAt: item.updatedAt || item.createdAt || null,
+    raw: item,
+  };
+}
+
+function extractAdminArray(data) {
+  const candidates = [
+    data?.data?.content,
+    data?.data?.filings,
+    data?.data,
+    data?.content,
+    data,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+  }
+
+  return [];
+}
+
+export async function getAdminFilings({ page = 0, size = 10, status, type, unassigned = false } = {}) {
+  const params = new URLSearchParams({
+    page: String(page),
+    size: String(size),
+    unassigned: String(Boolean(unassigned)),
+  });
+
+  if (status) params.set("status", status);
+  if (type) params.set("type", type);
+
+  const response = await apiRequest(`/api/admin/filings?${params.toString()}`, { method: "GET" });
+  if (!response.ok) {
+    return {
+      ok: false,
+      items: [],
+      pagination: {
+        page,
+        size,
+        totalElements: 0,
+        totalPages: 0,
+      },
+      status: response.status,
+      data: response.data,
+    };
+  }
+
+  const list = extractAdminArray(response.data).map(normalizeAdminFiling);
+  const payload = response.data?.data || {};
+
+  return {
+    ok: true,
+    items: list,
+    pagination: {
+      page: payload.pageable?.page ?? page,
+      size: payload.pageable?.size ?? size,
+      totalElements: payload.pageable?.totalElements ?? list.length,
+      totalPages: payload.pageable?.totalPages ?? (list.length > 0 ? 1 : 0),
+    },
+    status: response.status,
+    data: response.data,
+  };
+}
+
+export async function getAdminAgents() {
+  const response = await apiRequest("/api/admin/agents", { method: "GET" });
+  if (!response.ok) {
+    return {
+      ok: false,
+      items: [],
+      status: response.status,
+      data: response.data,
+    };
+  }
+
+  const candidates = [response.data?.data, response.data?.agents, response.data];
+  const list = candidates.find((entry) => Array.isArray(entry)) || [];
+
+  const items = list.map((agent = {}) => ({
+    id: agent.id || agent.agentId || "",
+    name: agent.name || agent.fullName || agent.email || "Agent",
+    email: agent.email || "",
+    activeAssignments: agent.activeAssignments || agent.assignedCount || 0,
+    raw: agent,
+  }));
+
+  return {
+    ok: true,
+    items,
+    status: response.status,
+    data: response.data,
+  };
+}
+
+export async function assignAdminFiling(filingId = "", agentId = "") {
+  const id = String(filingId || "").trim();
+  const nextAgentId = String(agentId || "").trim();
+  if (!id || !nextAgentId) {
+    return {
+      ok: false,
+      status: 400,
+      data: { message: "Filing ID and agent ID are required." },
+    };
+  }
+
+  const response = await apiRequest(`/api/admin/filings/${encodeURIComponent(id)}/assign`, {
+    method: "PATCH",
+    body: { agentId: nextAgentId },
+  });
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data: response.data,
+  };
+}
+
+export async function reassignAdminFiling(filingId = "", agentId = "") {
+  const id = String(filingId || "").trim();
+  const nextAgentId = String(agentId || "").trim();
+  if (!id || !nextAgentId) {
+    return {
+      ok: false,
+      status: 400,
+      data: { message: "Filing ID and agent ID are required." },
+    };
+  }
+
+  const response = await apiRequest(`/api/admin/filings/${encodeURIComponent(id)}/reassign`, {
+    method: "PATCH",
+    body: { agentId: nextAgentId },
+  });
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data: response.data,
+  };
+}
+
+export async function updateAdminFilingStatus(filingId = "", status = "") {
+  const id = String(filingId || "").trim();
+  const nextStatus = String(status || "").trim().toUpperCase();
+  if (!id || !nextStatus) {
+    return {
+      ok: false,
+      status: 400,
+      data: { message: "Filing ID and status are required." },
+    };
+  }
+
+  const response = await apiRequest(`/api/admin/filings/${encodeURIComponent(id)}/status`, {
+    method: "PATCH",
+    body: { status: nextStatus },
+  });
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data: response.data,
+  };
+}
+
 export async function updateAgentPatentStatus(patentId = "", status = "") {
   const id = String(patentId || "").trim();
   const nextStatus = String(status || "").trim().toUpperCase();
