@@ -1,56 +1,367 @@
 "use client";
-import GenericFilingForm from "@/components/dashboard/GenericFilingForm";
+import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { submitClientPatent } from "@/lib/api";
 
-const patentFormSections = {
-  details: {
-    required: [
-      { key: "titleOfInvention", label: "Title of Invention", type: "text", required: true, placeholder: "e.g. AI-Driven Sorting System" },
-      { key: "abstractOfInvention", label: "Abstract of Invention", type: "textarea", required: true, placeholder: "Provide a concise technical abstract...", rows: 4 },
-      { key: "fieldOfInvention", label: "Field of Invention (Technical domain)", type: "text", required: true, placeholder: "e.g. Mechanical Engineering" },
-      { key: "claims", label: "Claims (text or file)", type: "textarea", required: true, placeholder: "Enter key patent claims here (or upload in documents step).", rows: 4 },
-    ],
-    optional: [
-      { key: "priorityDate", label: "Priority Date", type: "date" },
-      { key: "specificationChoice", label: "Provisional / Complete Specification", type: "radio", options: ["Provisional", "Complete"], defaultValue: "Complete" },
-      { key: "fastTrackRequest", label: "Fast Track Request", type: "radio", options: ["Yes", "No"], defaultValue: "No" },
-    ],
-  },
-  applicant: {
-    required: [
-      { key: "applicantName", label: "Applicant Name", type: "text", required: true, placeholder: "e.g. John Doe" },
-      { key: "applicantType", label: "Applicant Type", type: "select", required: true, options: ["Individual", "Startup", "Company"] },
-      { key: "address", label: "Address (Full Address)", type: "textarea", required: true, placeholder: "Enter full address", rows: 3 },
-      { key: "country", label: "Country", type: "text", required: true, placeholder: "e.g. India" },
-      { key: "inventorName", label: "Inventor Details - Name", type: "text", required: true, placeholder: "Inventor full name" },
-      { key: "inventorAddress", label: "Inventor Details - Address", type: "textarea", required: true, placeholder: "Inventor address", rows: 3 },
-    ],
-    optional: [
-      { key: "patentAgentDetails", label: "Patent Agent Details", type: "textarea", placeholder: "Name, reg no., contact" },
-      { key: "correspondenceAddress", label: "Correspondence Address (if different)", type: "textarea", placeholder: "Enter correspondence address" },
-    ],
-  },
-  documents: {
-    required: [
-      { key: "specificationDocument", label: "Specification Document (PDF upload)", type: "file", required: true, accept: ".pdf", acceptHint: "PDF only" },
-      { key: "declarationConsent", label: "I hereby declare that the submitted information is true and I provide consent for filing.", type: "checkbox", required: true },
-    ],
-    optional: [
-      { key: "claimsFile", label: "Claims File Upload", type: "file", accept: ".pdf,.doc,.docx", acceptHint: "PDF, DOC, DOCX" },
-      { key: "drawingsDiagrams", label: "Drawings / Diagrams upload", type: "file", accept: ".pdf,.png,.jpg,.jpeg", acceptHint: "PDF, PNG, JPG" },
-      { key: "supportingDocuments", label: "Supporting Documents (proofs, annexures)", type: "file", multiple: true, accept: ".pdf,.doc,.docx,.png,.jpg,.jpeg", acceptHint: "Multiple files allowed" },
-    ],
-  },
-};
+const steps = ["Case Details", "Applicant Info", "Documents", "Review"];
 
-export default function NewPatentFilingPage() {
+const FIELD_OPTIONS = [
+  "Mechanical Engineering",
+  "Chemical",
+  "Software",
+  "Electronics",
+  "Biotechnology",
+  "Materials Science",
+  "Aerospace",
+  "Other",
+];
+
+export default function NewCasePage() {
+  const router = useRouter();
+  const fileInputRef = useRef(null);
+  const [step, setStep] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [fileName, setFileName] = useState("");
+
+  const [form, setForm] = useState({
+    title: "",
+    fieldOfInvention: "Mechanical Engineering",
+    fieldOfInventionOther: "",
+    abstract: "",
+    applicantName: "",
+    applicantEmail: "",
+    applicantMobile: "",
+    supportingDocument: "",
+  });
+
+  const handle = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  const handleFile = async (file) => {
+    if (!file) return;
+    setFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (e) => handle("supportingDocument", e.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFile(file);
+  };
+
+  const handleSubmit = async () => {
+    setError("");
+
+    const normalizedMobile = String(form.applicantMobile || "").replace(/\D/g, "");
+
+    const requiredChecks = [
+      [form.title, "Invention title is required."],
+      [form.abstract, "Abstract is required."],
+      [form.applicantName, "Applicant name is required."],
+      [form.applicantEmail, "Applicant email is required."],
+      [form.applicantMobile, "Applicant mobile is required."],
+    ];
+
+    const failed = requiredChecks.find(([value]) => !String(value || "").trim());
+    if (failed) {
+      setError(failed[1]);
+      return;
+    }
+
+    if (normalizedMobile.length < 10) {
+      setError("Applicant mobile must contain at least 10 digits.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const result = await submitClientPatent({
+        title: form.title,
+        description: form.abstract,
+        abstractText: form.abstract,
+        fieldOfInvention: form.fieldOfInvention,
+        fieldOfInventionOther: form.fieldOfInventionOther,
+        applicantName: form.applicantName,
+        applicantEmail: form.applicantEmail,
+        applicantMobile: normalizedMobile,
+        supportingDocument: form.supportingDocument,
+      });
+
+      if (!result.ok) {
+        const data = result.data || {};
+        const fieldErrors = data.errors?.map((e) => `${e.field ? e.field + ": " : ""}${e.message}`).join(" | ");
+        const apiMessage = data?.message || data?.error || data?.data?.message || "";
+        const errMsg =
+          fieldErrors ||
+          apiMessage ||
+          (result.status === 401 || result.status === 403
+            ? "Your session is not authorized for filing. Please login with a client account."
+            : "Submission failed. Please try again.");
+        setError(errMsg);
+        return;
+      }
+
+      const payload = result.data?.data || result.data || {};
+      const ref = encodeURIComponent(payload.referenceNumber || "");
+      const pid = encodeURIComponent(payload.patentId || payload.id || "");
+      router.push(`/dashboard/cases/success?ref=${ref}&patentId=${pid}`);
+    } catch {
+      setError("Network error. Please check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <GenericFilingForm
-      filingType="patent"
-      heading="New Patent Filing"
-      subheading="Submit a new patent filing application."
-      sections={patentFormSections}
-      referencePrefix="PT"
-      caseIdLabel="Patent ID"
-    />
+    <div className="max-w-2xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-[#0d1b2a]">New Patent Filing</h1>
+        <p className="text-sm text-gray-500 mt-0.5">Submit a new patent filing application.</p>
+      </div>
+
+      {/* Steps */}
+      <div className="flex items-center gap-2">
+        {steps.map((s, i) => (
+          <div key={s} className="flex items-center gap-2 flex-1 last:flex-none">
+            <div className={`flex items-center gap-2 ${i <= step ? "text-[#0d1b2a]" : "text-gray-300"}`}>
+              <div
+                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors ${
+                  i < step
+                    ? "bg-[#0d1b2a] border-[#0d1b2a] text-white"
+                    : i === step
+                    ? "border-[#0d1b2a] text-[#0d1b2a]"
+                    : "border-gray-200 text-gray-300"
+                }`}
+              >
+                {i < step ? <span className="material-symbols-outlined text-sm">check</span> : i + 1}
+              </div>
+              <span className="text-xs font-semibold hidden sm:block">{s}</span>
+            </div>
+            {i < steps.length - 1 && (
+              <div className={`flex-1 h-0.5 mx-1 ${i < step ? "bg-[#0d1b2a]" : "bg-gray-100"}`} />
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
+        {/* ── Step 0: Case Details ── */}
+        {step === 0 && (
+          <>
+            <h2 className="text-base font-bold text-[#0d1b2a]">Case Details</h2>
+            <div>
+              <label className="text-xs font-semibold text-[#0d1b2a] block mb-1.5">
+                Invention Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                value={form.title}
+                onChange={(e) => handle("title", e.target.value)}
+                placeholder="e.g. AI-Driven Sorting System"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#0d1b2a]"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-[#0d1b2a] block mb-1.5">
+                Field of Invention <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={form.fieldOfInvention}
+                onChange={(e) => handle("fieldOfInvention", e.target.value)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#0d1b2a] bg-white"
+              >
+                {FIELD_OPTIONS.map((f) => (
+                  <option key={f}>{f}</option>
+                ))}
+              </select>
+            </div>
+            {form.fieldOfInvention === "Other" && (
+              <div>
+                <label className="text-xs font-semibold text-[#0d1b2a] block mb-1.5">
+                  Specify Field of Invention
+                </label>
+                <input
+                  value={form.fieldOfInventionOther}
+                  onChange={(e) => handle("fieldOfInventionOther", e.target.value)}
+                  placeholder="Describe the field of invention"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#0d1b2a]"
+                />
+              </div>
+            )}
+            <div>
+                <label className="text-xs font-semibold text-[#0d1b2a] block mb-1.5">
+                  Abstract <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={form.abstract}
+                  onChange={(e) => handle("abstract", e.target.value)}
+                  rows={4}
+                  placeholder="Brief description of the invention..."
+                  className="w-full border rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#0d1b2a] resize-none border-gray-200"
+                />
+            </div>
+          </>
+        )}
+
+        {/* ── Step 1: Applicant Info ── */}
+        {step === 1 && (
+          <>
+            <h2 className="text-base font-bold text-[#0d1b2a]">Applicant Information</h2>
+            <div>
+              <label className="text-xs font-semibold text-[#0d1b2a] block mb-1.5">
+                Full Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                value={form.applicantName}
+                onChange={(e) => handle("applicantName", e.target.value)}
+                placeholder="e.g. John Doe"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#0d1b2a]"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-[#0d1b2a] block mb-1.5">
+                Email Address <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                value={form.applicantEmail}
+                onChange={(e) => handle("applicantEmail", e.target.value)}
+                placeholder="e.g. john@example.com"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#0d1b2a]"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-[#0d1b2a] block mb-1.5">
+                Mobile Number <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                value={form.applicantMobile}
+                onChange={(e) => handle("applicantMobile", e.target.value)}
+                placeholder="e.g. +91 9876543210"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#0d1b2a]"
+              />
+            </div>
+          </>
+        )}
+
+        {/* ── Step 2: Documents ── */}
+        {step === 2 && (
+          <>
+            <h2 className="text-base font-bold text-[#0d1b2a]">Supporting Document</h2>
+            <div
+              onDrop={handleDrop}
+              onDragOver={(e) => e.preventDefault()}
+              onClick={() => fileInputRef.current?.click()}
+              className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${
+                fileName ? "border-[#0d1b2a] bg-[#f0f4f8]" : "border-gray-200 hover:border-[#0d1b2a]"
+              }`}
+            >
+              <span className="material-symbols-outlined text-gray-400 text-4xl">
+                {fileName ? "description" : "upload_file"}
+              </span>
+              {fileName ? (
+                <>
+                  <p className="text-sm font-semibold text-[#0d1b2a] mt-2">{fileName}</p>
+                  <p className="text-xs text-gray-400 mt-1">Click to change file</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-[#0d1b2a] mt-2">Drag & drop file here</p>
+                  <p className="text-xs text-gray-400 mt-1">PDF, DOCX, PNG up to 50 MB</p>
+                  <button
+                    type="button"
+                    className="mt-4 text-xs font-semibold border border-gray-200 px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    Browse Files
+                  </button>
+                </>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx,.png,.jpg"
+              className="hidden"
+              onChange={(e) => handleFile(e.target.files?.[0])}
+            />
+          </>
+        )}
+
+        {/* ── Step 3: Review ── */}
+        {step === 3 && (
+          <>
+            <h2 className="text-base font-bold text-[#0d1b2a]">Review & Submit</h2>
+            <div className="space-y-0">
+              {[
+                ["Invention Title", form.title || "—"],
+                [
+                  "Field of Invention",
+                  form.fieldOfInvention === "Other"
+                    ? form.fieldOfInventionOther || "Other"
+                    : form.fieldOfInvention,
+                ],
+                ["Abstract", form.abstract || "—"],
+                ["Applicant Name", form.applicantName || "—"],
+                ["Email", form.applicantEmail || "—"],
+                ["Mobile", form.applicantMobile || "—"],
+                ["Supporting Document", fileName || "No file uploaded"],
+              ].map(([label, val]) => (
+                <div key={label} className="flex justify-between py-2.5 border-b border-gray-50 last:border-0">
+                  <span className="text-xs text-gray-400 w-40 shrink-0">{label}</span>
+                  <span className="text-xs font-semibold text-[#0d1b2a] text-right break-all">{val}</span>
+                </div>
+              ))}
+            </div>
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-xs text-red-600 font-medium">
+                {error}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── Navigation ── */}
+        <div className="flex gap-3 pt-2">
+          {step > 0 && (
+            <button
+              onClick={() => { setStep((s) => s - 1); setError(""); }}
+              disabled={submitting}
+              className="border border-gray-200 text-[#0d1b2a] text-sm font-semibold px-5 py-2.5 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              Back
+            </button>
+          )}
+          {step < steps.length - 1 ? (
+            <button
+              onClick={() => setStep((s) => s + 1)}
+              className="flex-1 bg-[#0d1b2a] text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-[#1a2f4a] transition-colors"
+            >
+              Continue
+            </button>
+          ) : (
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="flex-1 bg-[#f5a623] text-[#0d1b2a] text-sm font-bold py-2.5 rounded-lg hover:bg-[#e09610] transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {submitting ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-[#0d1b2a]/30 border-t-[#0d1b2a] rounded-full animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-base">send</span>
+                  Submit Filing
+                </>
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

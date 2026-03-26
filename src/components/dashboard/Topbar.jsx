@@ -7,7 +7,6 @@ import { getStoredUser, getToken } from "@/lib/api";
 export default function DashboardTopbar({ title, searchPlaceholder = "Search case numbers, titles, or inventors...", onMenuOpen }) {
   const router = useRouter();
   const [user, setUser] = useState({ name: "User", role: "Client" });
-  const [showFilingPopup, setShowFilingPopup] = useState(false);
 
 
   useEffect(() => {
@@ -28,7 +27,6 @@ export default function DashboardTopbar({ title, searchPlaceholder = "Search cas
   }, [router]);
 
   return (
-    <>
     <header className="h-14 bg-white border-b border-gray-100 flex items-center gap-3 px-4 shrink-0">
       {/* Hamburger — mobile only */}
       <button
@@ -62,14 +60,13 @@ export default function DashboardTopbar({ title, searchPlaceholder = "Search cas
         </button>
 
         {/* New filing button — desktop only */}
-        <button
-          type="button"
-          onClick={() => setShowFilingPopup(true)}
+        <Link
+          href="/dashboard/cases/new"
           className="hidden lg:flex items-center gap-1.5 bg-[#0d1b2a] text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-[#1a2f4a] transition-colors"
         >
           <span className="material-symbols-outlined text-sm">add</span>
           NEW FILING
-        </button>
+        </Link>
 
         {/* User avatar */}
         <div className="flex items-center gap-2">
@@ -83,63 +80,5 @@ export default function DashboardTopbar({ title, searchPlaceholder = "Search cas
         </div>
       </div>
     </header>
-
-    {showFilingPopup && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <button
-          type="button"
-          aria-label="Close filing menu"
-          className="absolute inset-0 bg-[#0d1b2a]/40"
-          onClick={() => setShowFilingPopup(false)}
-        />
-        <div className="relative w-full max-w-xl bg-white rounded-2xl border border-gray-100 p-6 shadow-xl">
-          <div className="flex items-start justify-between gap-4 mb-5">
-            <div>
-              <h2 className="text-xl font-bold text-[#0d1b2a]">Select Filing Type</h2>
-              <p className="text-sm text-gray-500 mt-1">Choose a category to continue with filing.</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowFilingPopup(false)}
-              className="text-gray-400 hover:text-[#0d1b2a] transition-colors"
-            >
-              <span className="material-symbols-outlined">close</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Link
-              href="/dashboard/cases/new"
-              onClick={() => setShowFilingPopup(false)}
-              className="flex items-center justify-center text-sm font-semibold text-[#0d1b2a] border border-gray-200 rounded-xl py-3 hover:border-[#0d1b2a] transition-colors"
-            >
-              Patent
-            </Link>
-            <Link
-              href="/dashboard/cases/new/trademark"
-              onClick={() => setShowFilingPopup(false)}
-              className="flex items-center justify-center text-sm font-semibold text-[#0d1b2a] border border-gray-200 rounded-xl py-3 hover:border-[#0d1b2a] transition-colors"
-            >
-              Trademark
-            </Link>
-            <Link
-              href="/dashboard/cases/new/copyright"
-              onClick={() => setShowFilingPopup(false)}
-              className="flex items-center justify-center text-sm font-semibold text-[#0d1b2a] border border-gray-200 rounded-xl py-3 hover:border-[#0d1b2a] transition-colors"
-            >
-              Copyright
-            </Link>
-            <Link
-              href="/dashboard/cases/new/design"
-              onClick={() => setShowFilingPopup(false)}
-              className="flex items-center justify-center text-sm font-semibold text-[#0d1b2a] border border-gray-200 rounded-xl py-3 hover:border-[#0d1b2a] transition-colors"
-            >
-              Design Registration
-            </Link>
-          </div>
-        </div>
-      </div>
-    )}
-    </>
   );
 }
