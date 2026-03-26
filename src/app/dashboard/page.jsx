@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { getClientPatents } from "@/lib/api";
+import { getClientFilings } from "@/lib/api";
 
 const STATUS_COLOR = {
   DRAFT: "bg-gray-100 text-gray-700",
@@ -26,7 +26,7 @@ export default function DashboardPage() {
     const loadDashboard = async () => {
       setLoading(true);
       setError("");
-      const result = await getClientPatents({ page: 0, size: 50, sort: "submittedAt,desc" });
+      const result = await getClientFilings({ page: 0, size: 50, sort: "submittedAt,desc" });
 
       if (!result.ok) {
         setError(result.data?.message || "Unable to load dashboard data.");
@@ -88,8 +88,9 @@ export default function DashboardPage() {
   const cases = filings.slice(0, 8).map((f) => ({
     id: f.referenceNumber,
     title: f.title || "Untitled Filing",
-    patentId: f.patentId || "-",
-    type: "PATENT FILING",
+    caseTypeId: f.typeId || f.patentId || "-",
+    caseTypeIdLabel: f.typeIdLabel || "Case ID",
+    type: f.typeLabel || "FILING",
     status: f.status || "-",
     statusColor: STATUS_COLOR[f.status] || "bg-gray-100 text-gray-700",
     updated: formatDate(f.submittedAt),
@@ -99,7 +100,7 @@ export default function DashboardPage() {
     .filter((f) => f.status === "PENDING")
     .slice(0, 4)
     .map((f) => ({
-      label: `${f.referenceNumber || "Filing"} awaiting review`,
+      label: `${f.typeLabel || "FILING"} ${f.referenceNumber || "Filing"} awaiting review`,
       date: formatDate(f.submittedAt),
       urgent: false,
     }));
@@ -109,7 +110,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-[#0d1b2a]">Dashboard Overview</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Overview from your latest patent filings.</p>
+        <p className="text-sm text-gray-500 mt-0.5">Overview from your latest filings.</p>
       </div>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
@@ -161,7 +162,7 @@ export default function DashboardPage() {
                   <td className="px-6 py-4 text-xs font-semibold text-[#0d1b2a]">{c.id || "-"}</td>
                   <td className="px-4 py-4">
                     <Link href={`/dashboard/cases/${encodeURIComponent(c.id || "")}`} className="font-semibold text-[#0d1b2a] hover:text-[#f5a623] transition-colors text-sm">{c.title}</Link>
-                    <p className="text-xs text-gray-400 mt-0.5">Patent ID: {c.patentId}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{c.caseTypeIdLabel}: {c.caseTypeId}</p>
                   </td>
                   <td className="px-4 py-4 text-xs text-gray-500">{c.type}</td>
                   <td className="px-4 py-4">

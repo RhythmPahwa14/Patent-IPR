@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { getClientPatents } from "@/lib/api";
+import { getClientFilings } from "@/lib/api";
 
 const PAGE_SIZE = 10;
 const statusFilters = ["All", "DRAFT", "PENDING", "APPROVED", "REJECTED"];
@@ -35,7 +35,7 @@ export default function CasesPage() {
       setLoading(true);
       setError("");
 
-      const result = await getClientPatents({
+      const result = await getClientFilings({
         page,
         size: PAGE_SIZE,
         sort: "submittedAt,desc",
@@ -68,8 +68,9 @@ export default function CasesPage() {
     return filings.filter((c) => {
       const title = (c.title || "").toLowerCase();
       const ref = (c.referenceNumber || "").toLowerCase();
-      const pid = (c.patentId || "").toLowerCase();
-      return title.includes(q) || ref.includes(q) || pid.includes(q);
+      const pid = (c.typeId || c.patentId || "").toLowerCase();
+      const type = (c.typeLabel || "").toLowerCase();
+      return title.includes(q) || ref.includes(q) || pid.includes(q) || type.includes(q);
     });
   }, [filings, search]);
 
@@ -201,13 +202,13 @@ export default function CasesPage() {
                 </tr>
               )}
               {filtered.map((c, i) => (
-                <tr key={c.referenceNumber || c.patentId || i} className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${i === filtered.length - 1 ? "border-0" : ""}`}>
+                <tr key={c.referenceNumber || c.typeId || c.id || i} className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${i === filtered.length - 1 ? "border-0" : ""}`}>
                   <td className="px-6 py-4 text-xs font-semibold text-[#0d1b2a]">{c.referenceNumber || "-"}</td>
                   <td className="px-4 py-4">
                     <Link href={`/dashboard/cases/${encodeURIComponent(c.referenceNumber || "")}`} className="font-semibold text-[#0d1b2a] hover:text-[#f5a623] transition-colors">{c.title || "Untitled Filing"}</Link>
-                    <p className="text-xs text-gray-400 mt-0.5">Patent ID: {c.patentId || "-"}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{c.typeIdLabel || "Case ID"}: {c.typeId || c.patentId || "-"}</p>
                   </td>
-                  <td className="px-4 py-4 text-xs text-gray-500">PATENT FILING</td>
+                  <td className="px-4 py-4 text-xs text-gray-500">{c.typeLabel || "FILING"}</td>
                   <td className="px-4 py-4 text-xs text-gray-500">-</td>
                   <td className="px-4 py-4">
                     <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded tracking-wider ${statusColorMap[c.status] || "bg-gray-100 text-gray-700"}`}>{c.status || "-"}</span>

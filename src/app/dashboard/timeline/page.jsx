@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { getClientPatents } from "@/lib/api";
+import { getClientFilings } from "@/lib/api";
 
 const STATUS_BADGE = {
   DRAFT: "bg-gray-100 text-gray-700",
@@ -25,7 +25,7 @@ export default function TimelinePage() {
     const loadTimeline = async () => {
       setLoading(true);
       setError("");
-      const result = await getClientPatents({ page: 0, size: 100, sort: "submittedAt,desc" });
+      const result = await getClientFilings({ page: 0, size: 100, sort: "submittedAt,desc" });
 
       if (!result.ok) {
         setError(result.data?.message || "Unable to load timeline.");
@@ -46,7 +46,7 @@ export default function TimelinePage() {
       const submitted = f.submittedAt
         ? [{
             id: `${f.referenceNumber}-submitted`,
-            title: `Filing submitted: ${f.title || "Untitled Filing"}`,
+            title: `${f.typeLabel || "FILING"} submitted: ${f.title || "Untitled Filing"}`,
             case: f.referenceNumber || "-",
             type: "SUBMITTED",
             urgent: false,
