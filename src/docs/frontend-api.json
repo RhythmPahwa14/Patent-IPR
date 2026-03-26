@@ -1,195 +1,110 @@
 {
-  "name": "Patent IPR Backend API Contract",
+  "name": "Express Auth + Patent Filing API Contract",
   "version": "1.0.0",
-  "baseUrl": "http://localhost:5000",
+  "baseUrl": "https://express-backend-ajedhzd3h0bfbse5.westindia-01.azurewebsites.net",
   "auth": {
     "type": "Bearer",
     "header": "Authorization",
     "format": "Bearer <token>"
   },
-  "responseFormat": {
-    "success": {
-      "success": true,
-      "data": {}
-    },
-    "error": {
-      "success": false,
-      "message": "error message"
-    },
-    "legacyError": {
-      "message": "error message"
-    }
-  },
   "endpoints": [
     {
-      "name": "Health",
-      "method": "GET",
-      "path": "/api/health",
-      "authRequired": false
-    },
-    {
-      "name": "Register",
+      "group": "Auth",
       "method": "POST",
       "path": "/api/auth/register",
       "authRequired": false,
-      "note": "Backend always creates role CLIENT",
-      "body": {
-        "name": "John Doe",
-        "email": "john@example.com",
-        "password": "password123"
-      }
+      "description": "Register a user (client or agent)"
     },
     {
-      "name": "Login",
+      "group": "Auth",
       "method": "POST",
       "path": "/api/auth/login",
       "authRequired": false,
-      "body": {
-        "email": "john@example.com",
-        "password": "password123"
-      }
+      "description": "Login user and receive JWT"
     },
     {
-      "name": "Admin Create Agent",
-      "method": "POST",
-      "path": "/api/admin/create-agent",
-      "authRequired": true,
-      "roles": ["ADMIN"],
-      "body": {
-        "name": "Agent Name",
-        "email": "agent@example.com",
-        "password": "password123"
-      }
-    },
-    {
-      "name": "Admin Create Client",
-      "method": "POST",
-      "path": "/api/admin/create-client",
-      "authRequired": true,
-      "roles": ["ADMIN"],
-      "body": {
-        "name": "Client Name",
-        "email": "client@example.com",
-        "password": "password123"
-      }
-    },
-    {
-      "name": "Admin Get Users",
+      "group": "Auth",
       "method": "GET",
-      "path": "/api/admin/users",
+      "path": "/api/auth/me",
       "authRequired": true,
-      "roles": ["ADMIN"]
+      "description": "Get current logged-in user"
     },
     {
-      "name": "Admin Delete User",
-      "method": "DELETE",
-      "path": "/api/admin/user/:id",
+      "group": "Auth",
+      "method": "GET",
+      "path": "/api/auth/admin-only",
       "authRequired": true,
-      "roles": ["ADMIN"]
+      "description": "Admin only protected route example"
     },
     {
-      "name": "Admin Assign Patent",
+      "group": "Patent Filings",
       "method": "POST",
-      "path": "/api/admin/assign-patent",
+      "path": "/api/patent-filings",
       "authRequired": true,
-      "roles": ["ADMIN"],
-      "body": {
-        "patentId": "patent-uuid",
-        "agentId": "agent-uuid"
-      }
+      "description": "Create patent filing draft or submit directly"
     },
     {
-      "name": "Client Submit Patent",
+      "group": "Patent Filings",
       "method": "POST",
-      "path": "/api/patent/submit",
+      "path": "/api/patent-filings/{id}/submit",
       "authRequired": true,
-      "roles": ["CLIENT"],
-      "body": {
-        "title": "AI-based Compression",
-        "description": "A method for improving data compression using ML"
-      }
+      "description": "Submit a DRAFT patent filing"
     },
     {
-      "name": "Client My Patents",
+      "group": "Patent Filings",
+      "method": "PATCH",
+      "path": "/api/patent-filings/{id}",
+      "authRequired": true,
+      "description": "Update draft filing fields"
+    },
+    {
+      "group": "Patent Filings",
+      "method": "GET",
+      "path": "/api/patent-filings/{referenceNumber}",
+      "authRequired": true,
+      "description": "Get filing detail by reference number"
+    },
+    {
+      "group": "Patent Filings",
+      "method": "POST",
+      "path": "/api/patent-filings/{id}/documents",
+      "authRequired": true,
+      "description": "Attach supporting document URL to filing"
+    },
+    {
+      "group": "Patent Filings",
       "method": "GET",
       "path": "/api/client/patents",
       "authRequired": true,
-      "roles": ["CLIENT"]
+      "description": "List patent filings with pagination and optional status filter"
     },
     {
-      "name": "Agent Assigned Patents",
-      "method": "GET",
-      "path": "/api/agent/patents",
-      "authRequired": true,
-      "roles": ["AGENT"]
-    },
-    {
-      "name": "Agent Update Patent Status",
-      "method": "PUT",
-      "path": "/api/agent/patent/:id",
-      "authRequired": true,
-      "roles": ["AGENT"],
-      "body": {
-        "status": "APPROVED"
-      }
-    },
-    {
-      "name": "Legacy: Get Patent By Reference",
-      "method": "GET",
-      "path": "/api/v1/patents/:referenceNumber",
-      "authRequired": false
-    },
-    {
-      "name": "Legacy: User Filings",
-      "method": "GET",
-      "path": "/api/v1/patents/user/filings",
-      "authRequired": true
-    },
-    {
-      "name": "Legacy: Generate Reference",
-      "method": "GET",
-      "path": "/api/v1/patents/reference-number/next",
-      "authRequired": false
-    },
-    {
-      "name": "Legacy: Get Draft",
-      "method": "GET",
-      "path": "/api/v1/patents/draft/:draftId",
-      "authRequired": true
-    },
-    {
-      "name": "Legacy: Submit Filing",
+      "group": "Patent Filings (Legacy)",
       "method": "POST",
       "path": "/api/v1/patents/submit",
       "authRequired": true,
-      "body": {
-        "supportingDocument": "https://example.com/file.pdf"
-      },
-      "query": {
-        "title": "AI Compression",
-        "fieldOfInvention": "Software",
-        "fieldOfInventionOther": "optional",
-        "abstract": "short abstract",
-        "applicantName": "John Doe",
-        "applicantEmail": "john@example.com",
-        "applicantMobile": "9999999999"
-      }
+      "description": "Legacy patent submit endpoint for frontend compatibility"
     },
     {
-      "name": "Legacy: Save Draft",
-      "method": "POST",
-      "path": "/api/v1/patents/draft",
+      "group": "Patent Filings (Legacy)",
+      "method": "GET",
+      "path": "/api/v1/patents/user/filings",
       "authRequired": true,
-      "body": {
-        "draftId": "optional-uuid",
-        "title": "draft title",
-        "fieldOfInvention": "Software",
-        "fieldOfInventionOther": "optional",
-        "abstractText": "draft abstract",
-        "applicantName": "John Doe",
-        "applicantEmail": "john@example.com",
-        "applicantMobile": "9999999999"
-      }
+      "description": "Legacy list endpoint for frontend compatibility"
+    },
+    {
+      "group": "Patent Filings (Legacy)",
+      "method": "GET",
+      "path": "/api/v1/patents/{referenceNumber}",
+      "authRequired": true,
+      "description": "Legacy detail endpoint for frontend compatibility"
+    },
+    {
+      "group": "Files",
+      "method": "POST",
+      "path": "/api/files/presign",
+      "authRequired": true,
+      "description": "Generate a pre-signed upload URL (mock implementation)"
     }
   ]
 }
