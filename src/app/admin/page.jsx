@@ -3,12 +3,12 @@ import { useEffect, useMemo, useState } from "react";
 import {
   assignAdminFiling,
   getAdminAgents,
-  getAdminFilings,
+  getAdminDashboard,
   reassignAdminFiling,
   updateAdminFilingStatus,
 } from "@/lib/api";
 
-const STATUS_OPTIONS = ["DRAFT", "PENDING", "ASSIGNED", "IN_PROGRESS", "COMPLETED", "APPROVED", "REJECTED"];
+const STATUS_OPTIONS = ["DRAFT", "PENDING", "APPROVED", "REJECTED"];
 
 function formatDate(value) {
   if (!value) return "-";
@@ -26,15 +26,21 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [busyFilingId, setBusyFilingId] = useState("");
+  const [dashboardStats, setDashboardStats] = useState({
+    totalFilings: 0,
+    unassigned: 0,
+    inProgress: 0,
+    decided: 0,
+  });
 
   const loadData = async () => {
     setLoading(true);
     setError("");
 
-    const [filingsRes, agentsRes] = await Promise.all([
-      getAdminFilings({
+    const [dashboardRes, agentsRes] = await Promise.all([
+      getAdminDashboard({
         page: 0,
-        size: 20,
+        size: 10,
         status: statusFilter || undefined,
         type: typeFilter || undefined,
         unassigned: unassignedOnly,
@@ -42,11 +48,23 @@ export default function AdminDashboardPage() {
       getAdminAgents(),
     ]);
 
-    if (!filingsRes.ok) {
-      setError(filingsRes.data?.message || "Unable to load admin filings.");
+    if (!dashboardRes.ok) {
+      setError(dashboardRes.data?.message || "Unable to load admin filings.");
       setFilings([]);
+      setDashboardStats({
+        totalFilings: 0,
+        unassigned: 0,
+        inProgress: 0,
+        decided: 0,
+      });
     } else {
-      setFilings(filingsRes.items || []);
+      setFilings(dashboardRes.items || []);
+      setDashboardStats(dashboardRes.stats || {
+        totalFilings: 0,
+        unassigned: 0,
+        inProgress: 0,
+        decided: 0,
+      });
     }
 
     if (!agentsRes.ok) {
@@ -64,13 +82,20 @@ export default function AdminDashboardPage() {
   }, [statusFilter, typeFilter, unassignedOnly]);
 
   const stats = useMemo(() => {
-    const total = filings.length;
-    const unassigned = filings.filter((item) => !item.assignedAgentId).length;
-    const inProgress = filings.filter((item) => ["ASSIGNED", "IN_PROGRESS"].includes(item.status)).length;
-    const completed = filings.filter((item) => ["COMPLETED", "APPROVED", "REJECTED"].includes(item.status)).length;
+    const fallback = {
+      totalFilings: filings.length,
+      unassigned: filings.filter((item) => !item.assignedAgentId).length,
+      inProgress: filings.filter((item) => item.status === "PENDING").length,
+      decided: filings.filter((item) => ["APPROVED", "REJECTED"].includes(item.status)).length,
+    };
 
-    return { total, unassigned, inProgress, completed };
-  }, [filings]);
+    return {
+      total: dashboardStats.totalFilings ?? fallback.totalFilings,
+      unassigned: dashboardStats.unassigned ?? fallback.unassigned,
+      inProgress: dashboardStats.inProgress ?? fallback.inProgress,
+      completed: dashboardStats.decided ?? fallback.decided,
+    };
+  }, [dashboardStats, filings]);
 
   const handleAssignAction = async (filing, nextAgentId) => {
     if (!nextAgentId) return;
