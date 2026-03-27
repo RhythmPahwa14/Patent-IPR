@@ -7,6 +7,7 @@ const mainNav = [
   { label: "All Filings", icon: "folder_managed", href: "/admin/filings" },
   { label: "Unassigned", icon: "person_off", href: "/admin/unassigned" },
   { label: "Agents", icon: "groups", href: "/admin/agents" },
+  { label: "Clients", icon: "supervisor_account", href: "/admin/clients" },
 ];
 
 const controlNav = [
