@@ -63,6 +63,8 @@ export async function apiRequest(path, { method = "GET", body, headers = {}, wit
 }
 
 function normalizePatent(item = {}) {
+  const agentId = item.assignedAgentId || item.assigned_agent_id || item.agentId || item.agent_id || item.assignedAgent?.id || item.agent?.id || item.assignedTo || item.assigned_to || null;
+  const agentName = item.assignedAgentName || item.assigned_agent_name || item.agentName || item.agent_name || item.assignedAgent?.name || item.agent?.name || item.assignedAgent?.fullName || item.agent?.fullName || item.assignedToName || item.assigned_to_name || "";
   return {
     id: item.id || item.patentId || item.referenceNumber || "",
     referenceNumber: item.referenceNumber || item.referenceNo || "",
@@ -76,6 +78,8 @@ function normalizePatent(item = {}) {
     applicantEmail: item.applicantEmail || "",
     applicantMobile: item.applicantMobile || "",
     status: item.status || item.patentStatus || "",
+    assignedAgentId: agentId,
+    assignedAgentName: agentName,
     submittedAt: item.submittedAt || item.createdAt || null,
     updatedAt: item.updatedAt || item.createdAt || null,
   };
@@ -353,8 +357,8 @@ function normalizeAdminFiling(item = {}) {
     type: item.type || item.filingType || "",
     status: item.status || "",
     applicantName: item.applicantName || "",
-    assignedAgentId: item.assignedAgentId || item.agentId || null,
-    assignedAgentName: item.assignedAgentName || item.agentName || "",
+    assignedAgentId: item.assignedAgentId || item.assigned_agent_id || item.agentId || item.agent_id || item.assignedAgent?.id || item.agent?.id || item.assignedTo || item.assigned_to || null,
+    assignedAgentName: item.assignedAgentName || item.assigned_agent_name || item.agentName || item.agent_name || item.assignedAgent?.name || item.agent?.name || item.assignedAgent?.fullName || item.agent?.fullName || item.assignedToName || item.assigned_to_name || "",
     submittedAt: item.submittedAt || item.createdAt || null,
     updatedAt: item.updatedAt || item.createdAt || null,
     estimation: item.estimation ?? null,
@@ -551,6 +555,8 @@ const NON_PATENT_DETAIL_ENDPOINTS = {
 };
 
 function normalizeTrademark(item = {}) {
+  const agentId = item.assignedAgentId || item.assigned_agent_id || item.agentId || item.agent_id || item.assignedAgent?.id || item.agent?.id || item.assignedTo || item.assigned_to || null;
+  const agentName = item.assignedAgentName || item.assigned_agent_name || item.agentName || item.agent_name || item.assignedAgent?.name || item.agent?.name || item.assignedAgent?.fullName || item.agent?.fullName || item.assignedToName || item.assigned_to_name || "";
   return {
     id: item.id || item.trademarkId || item.referenceNumber || "",
     referenceNumber: item.referenceNumber || item.referenceNo || "",
@@ -564,6 +570,8 @@ function normalizeTrademark(item = {}) {
     applicantEmail: item.applicantEmail || "",
     applicantMobile: item.applicantMobile || "",
     status: item.status || "",
+    assignedAgentId: agentId,
+    assignedAgentName: agentName,
     submittedAt: item.submittedAt || item.createdAt || null,
     updatedAt: item.updatedAt || item.createdAt || null,
     filingType: "trademark",
@@ -579,6 +587,9 @@ function normalizeCopyright(item = {}) {
       ? item.authorDetails
       : item.authorDetails?.name || "";
 
+  const agentId = item.assignedAgentId || item.assigned_agent_id || item.agentId || item.agent_id || item.assignedAgent?.id || item.agent?.id || item.assignedTo || item.assigned_to || null;
+  const agentName = item.assignedAgentName || item.assigned_agent_name || item.agentName || item.agent_name || item.assignedAgent?.name || item.agent?.name || item.assignedAgent?.fullName || item.agent?.fullName || item.assignedToName || item.assigned_to_name || "";
+
   return {
     id: item.id || item.copyrightId || item.referenceNumber || "",
     referenceNumber: item.referenceNumber || item.referenceNo || "",
@@ -592,6 +603,8 @@ function normalizeCopyright(item = {}) {
     applicantEmail: item.applicantEmail || "",
     applicantMobile: item.applicantMobile || "",
     status: item.status || "",
+    assignedAgentId: agentId,
+    assignedAgentName: agentName,
     submittedAt: item.submittedAt || item.createdAt || null,
     updatedAt: item.updatedAt || item.createdAt || null,
     filingType: "copyright",
@@ -602,6 +615,8 @@ function normalizeCopyright(item = {}) {
 }
 
 function normalizeDesign(item = {}) {
+  const agentId = item.assignedAgentId || item.assigned_agent_id || item.agentId || item.agent_id || item.assignedAgent?.id || item.agent?.id || item.assignedTo || item.assigned_to || null;
+  const agentName = item.assignedAgentName || item.assigned_agent_name || item.agentName || item.agent_name || item.assignedAgent?.name || item.agent?.name || item.assignedAgent?.fullName || item.agent?.fullName || item.assignedToName || item.assigned_to_name || "";
   return {
     id: item.id || item.designId || item.referenceNumber || "",
     referenceNumber: item.referenceNumber || item.referenceNo || "",
@@ -615,6 +630,8 @@ function normalizeDesign(item = {}) {
     applicantEmail: item.applicantEmail || "",
     applicantMobile: item.applicantMobile || "",
     status: item.status || "",
+    assignedAgentId: agentId,
+    assignedAgentName: agentName,
     submittedAt: item.submittedAt || item.createdAt || null,
     updatedAt: item.updatedAt || item.createdAt || null,
     filingType: "design",

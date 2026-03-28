@@ -20,12 +20,53 @@ function formatDate(value) {
   return dt.toLocaleDateString();
 }
 
-function StatCard({ label, value, sub }) {
+function StatusBadge({ status }) {
+  if (!status) return <span className="text-gray-400">-</span>;
+  const s = String(status).toUpperCase();
+  let colorClass = "bg-gray-100 text-gray-700";
+  
+  if (s === "PENDING") colorClass = "bg-orange-100 text-orange-800";
+  else if (s === "IN_REVIEW") colorClass = "bg-blue-100 text-blue-800";
+  else if (s === "APPROVED") colorClass = "bg-green-100 text-green-800";
+  else if (s === "REJECTED") colorClass = "bg-red-100 text-red-800";
+  else if (s === "DRAFT") colorClass = "bg-slate-100 text-slate-700";
+
+  return <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase ${colorClass}`}>{s}</span>;
+}
+
+function TopStatCard({ label, value }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5">
-      <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1">{label}</p>
-      <p className="text-3xl font-bold text-[#10243a]">{value ?? 0}</p>
-      {sub && <p className="text-xs text-gray-500 mt-1">{sub}</p>}
+    <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm flex flex-col justify-center">
+      <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-1">{label}</p>
+      <p className="text-2xl font-black text-[#10243a]">{value ?? 0}</p>
+    </div>
+  );
+}
+
+function FilingStatsCard({ title, total, byStatus }) {
+  const statuses = Object.entries(byStatus || {});
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm flex flex-col">
+      <div className="flex justify-between items-center border-b border-gray-50 pb-3 mb-3">
+        <h3 className="text-[11px] font-bold tracking-widest uppercase text-[#10243a]">{title}</h3>
+        <div className="bg-[#10243a] text-white font-bold px-3 py-1 rounded-full text-[10px] tracking-wide">
+          TOTAL: {total || 0}
+        </div>
+      </div>
+      <div className="flex-1">
+        {statuses.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {statuses.map(([status, count]) => (
+              <div key={status} className="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 flex-grow">
+                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mr-4">{status}</span>
+                <span className="text-sm font-black text-[#10243a]">{count}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full text-xs text-gray-400 italic py-4">No filings to display.</div>
+        )}
+      </div>
     </div>
   );
 }
@@ -112,31 +153,17 @@ export default function AdminDashboardPage() {
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
-      {/* ── User stats ── */}
-      <div>
-        <h2 className="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-3">Users</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          <StatCard label="Total Users" value={stats?.users?.total} />
-          <StatCard label="Clients" value={stats?.users?.clients} />
-          <StatCard label="Agents" value={stats?.users?.agents} />
-        </div>
+      {/* ── Dashboard Stats Overview ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
+        <TopStatCard label="Total Users" value={stats?.users?.total} />
+        <TopStatCard label="Clients" value={stats?.users?.clients} />
+        <TopStatCard label="Agents" value={stats?.users?.agents} />
+        <TopStatCard label="Total Filings" value={(stats?.patentFilings?.total || 0) + (stats?.nonPatentFilings?.total || 0)} />
       </div>
 
-      {/* ── Filing stats ── */}
-      <div>
-        <h2 className="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-3">Patent Filings</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
-          <StatCard label="Total Patent Filings" value={stats?.patentFilings?.total} />
-          <StatCard label="By Status" value={null} sub={byStatus(stats?.patentFilings?.byStatus)} />
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-3">Non-Patent Filings</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
-          <StatCard label="Total Non-Patent Filings" value={stats?.nonPatentFilings?.total} />
-          <StatCard label="By Status" value={null} sub={byStatus(stats?.nonPatentFilings?.byStatus)} />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <FilingStatsCard title="Patent Filings" total={stats?.patentFilings?.total} byStatus={stats?.patentFilings?.byStatus} />
+        <FilingStatsCard title="Non-Patent Filings" total={stats?.nonPatentFilings?.total} byStatus={stats?.nonPatentFilings?.byStatus} />
       </div>
 
       <div className="flex justify-end">
@@ -168,8 +195,19 @@ export default function AdminDashboardPage() {
                 <tr key={item.id} className="border-b border-gray-50">
                   <td className="px-5 py-4 text-xs font-semibold text-[#10243a]">{item.referenceNumber || item.id || "-"}</td>
                   <td className="px-5 py-4 text-sm font-semibold text-[#10243a]">{item.title || "Untitled"}</td>
-                  <td className="px-5 py-4 text-xs text-gray-700">{item.status || "-"}</td>
-                  <td className="px-5 py-4 text-xs text-gray-600">{item.assignedAgentName || item.assignedAgentId || "Unassigned"}</td>
+                  <td className="px-5 py-4"><StatusBadge status={item.status} /></td>
+                  <td className="px-5 py-4 text-xs text-gray-600">
+                    {item.assignedAgentName || item.assignedAgentId ? (
+                      <span className="font-medium">{item.assignedAgentName || item.assignedAgentId}</span>
+                    ) : (
+                      <div className="flex flex-col">
+                        <span className="italic text-gray-400">Unassigned</span>
+                        <span className="text-[9px] text-gray-300 mt-1 max-w-[120px] leading-tight truncate" title={Object.keys(item.raw || {}).join(", ")}>
+                          {Object.keys(item.raw || {}).join(", ")}
+                        </span>
+                      </div>
+                    )}
+                  </td>
                   <td className="px-5 py-4">
                     <select
                       className="border border-gray-200 rounded-md px-2 py-1 text-xs"
@@ -223,8 +261,8 @@ export default function AdminDashboardPage() {
                 <tr key={item.id} className="border-b border-gray-50">
                   <td className="px-5 py-4 text-xs font-semibold text-[#10243a]">{item.referenceNumber || item.id || "-"}</td>
                   <td className="px-5 py-4 text-xs text-gray-600">{item.type || "-"}</td>
-                  <td className="px-5 py-4 text-xs text-gray-700">{item.status || "-"}</td>
-                  <td className="px-5 py-4 text-xs text-gray-600">{item.assignedAgentName || item.assignedAgentId || "Unassigned"}</td>
+                  <td className="px-5 py-4"><StatusBadge status={item.status} /></td>
+                  <td className="px-5 py-4 text-xs text-gray-600">{item.assignedAgentName || item.assignedAgentId || <span className="italic text-gray-400">Unassigned</span>}</td>
                   <td className="px-5 py-4">
                     <select
                       className="border border-gray-200 rounded-md px-2 py-1 text-xs"

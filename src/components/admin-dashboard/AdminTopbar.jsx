@@ -55,10 +55,10 @@ export default function AdminTopbar({ searchPlaceholder = "Search filings, agent
       </button>
 
       <div className="flex items-center gap-2 ml-auto">
-        <button className="relative p-1.5">
+        {/* <button className="relative p-1.5">
           <span className="material-symbols-outlined text-gray-500 text-xl">notifications</span>
           <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-        </button>
+        </button> */}
 
         <Link
           href="/admin/unassigned"
