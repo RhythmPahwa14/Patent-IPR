@@ -180,24 +180,169 @@ export async function getClientPatents({ page = 0, size = 10, status, sort = "su
   };
 }
 
-export async function getAgentPatents() {
-  const response = await apiRequest("/api/agent/patents", { method: "GET" });
+// ─── Agent Dashboard ─────────────────────────────────────────────────────────
+// GET /api/agent/dashboard
+export async function getAgentDashboard() {
+  const response = await apiRequest("/api/agent/dashboard", { method: "GET" });
   if (!response.ok) {
     return {
       ok: false,
-      items: [],
+      stats: {
+        assignedPatentFilings: { total: 0, byStatus: {} },
+        assignedNonPatentFilings: { total: 0, byStatus: {} },
+        recentActivity: {},
+      },
       status: response.status,
       data: response.data,
     };
   }
 
-  const list = extractPatentArray(response.data).map(normalizePatent);
+  const raw = response.data?.data || response.data || {};
   return {
     ok: true,
-    items: list,
+    stats: {
+      assignedPatentFilings: raw.assignedPatentFilings || { total: 0, byStatus: {} },
+      assignedNonPatentFilings: raw.assignedNonPatentFilings || { total: 0, byStatus: {} },
+      recentActivity: raw.recentActivity || {},
+    },
     status: response.status,
     data: response.data,
   };
+}
+
+// ─── Agent Profile ────────────────────────────────────────────────────────────
+// GET /api/agent/profile
+export async function getAgentProfile() {
+  const response = await apiRequest("/api/agent/profile", { method: "GET" });
+  if (!response.ok) {
+    // Fall back to localStorage
+    const stored = getStoredUser();
+    if (stored) return { ok: true, profile: stored, status: 200, data: stored };
+    return { ok: false, profile: null, status: response.status, data: response.data };
+  }
+
+  const raw = response.data?.data || response.data || {};
+  return {
+    ok: true,
+    profile: {
+      id: raw.id || "",
+      name: raw.name || "",
+      email: raw.email || "",
+      role: raw.role || "agent",
+    },
+    status: response.status,
+    data: response.data,
+  };
+}
+
+// ─── Agent Patent Filings ─────────────────────────────────────────────────────
+// GET /api/agent/patent-filings
+export async function getAgentPatentFilings({ status, search, page = 0, size = 20, sort = "assignedAt,desc" } = {}) {
+  const params = new URLSearchParams({ page: String(page), size: String(size), sort });
+  if (status) params.set("status", status);
+  if (search) params.set("search", search);
+
+  const response = await apiRequest(`/api/agent/patent-filings?${params.toString()}`, { method: "GET" });
+  if (!response.ok) {
+    return { ok: false, items: [], pagination: { page, size, totalElements: 0, totalPages: 0 }, status: response.status, data: response.data };
+  }
+
+  const list = extractPatentArray(response.data).map(normalizePatent);
+  const payload = response.data?.data || {};
+  return {
+    ok: true,
+    items: list,
+    pagination: {
+      page: payload.pageable?.page ?? page,
+      size: payload.pageable?.size ?? size,
+      totalElements: payload.pageable?.totalElements ?? list.length,
+      totalPages: payload.pageable?.totalPages ?? (list.length > 0 ? 1 : 0),
+    },
+    status: response.status,
+    data: response.data,
+  };
+}
+
+// GET /api/agent/patent-filings/{id}
+export async function getAgentPatentFilingById(id = "") {
+  const filingId = String(id || "").trim();
+  if (!filingId) return { ok: false, status: 400, data: { message: "Filing ID required." } };
+  const response = await apiRequest(`/api/agent/patent-filings/${encodeURIComponent(filingId)}`, { method: "GET" });
+  return {
+    ok: response.ok,
+    filing: response.ok ? normalizePatent(response.data?.data || response.data || {}) : null,
+    status: response.status,
+    data: response.data,
+  };
+}
+
+// PATCH /api/agent/patent-filings/{id}/status
+export async function updateAgentPatentFilingStatus(filingId = "", status = "", agentNote = "") {
+  const id = String(filingId || "").trim();
+  const nextStatus = String(status || "").trim().toUpperCase();
+  if (!id || !nextStatus) return { ok: false, status: 400, data: { message: "Filing ID and status are required." } };
+  const body = { status: nextStatus };
+  if (agentNote) body.agentNote = agentNote;
+  const response = await apiRequest(`/api/agent/patent-filings/${encodeURIComponent(id)}/status`, { method: "PATCH", body });
+  return { ok: response.ok, status: response.status, data: response.data };
+}
+
+// Legacy export – kept for backward-compat with any pages still importing this name
+export async function getAgentPatents({ status, search, page = 0, size = 20, sort = "assignedAt,desc" } = {}) {
+  return getAgentPatentFilings({ status, search, page, size, sort });
+}
+
+// ─── Agent Non-Patent Filings ─────────────────────────────────────────────────
+// GET /api/agent/non-patent-filings
+export async function getAgentNonPatentFilings({ status, filingType, search, page = 0, size = 20, sort = "assignedAt,desc" } = {}) {
+  const params = new URLSearchParams({ page: String(page), size: String(size), sort });
+  if (status) params.set("status", status);
+  if (filingType) params.set("filingType", filingType);
+  if (search) params.set("search", search);
+
+  const response = await apiRequest(`/api/agent/non-patent-filings?${params.toString()}`, { method: "GET" });
+  if (!response.ok) {
+    return { ok: false, items: [], pagination: { page, size, totalElements: 0, totalPages: 0 }, status: response.status, data: response.data };
+  }
+
+  const list = extractAdminArray(response.data).map(normalizeAdminFiling);
+  const payload = response.data?.data || {};
+  return {
+    ok: true,
+    items: list,
+    pagination: {
+      page: payload.pageable?.page ?? page,
+      size: payload.pageable?.size ?? size,
+      totalElements: payload.pageable?.totalElements ?? list.length,
+      totalPages: payload.pageable?.totalPages ?? (list.length > 0 ? 1 : 0),
+    },
+    status: response.status,
+    data: response.data,
+  };
+}
+
+// GET /api/agent/non-patent-filings/{id}
+export async function getAgentNonPatentFilingById(id = "") {
+  const filingId = String(id || "").trim();
+  if (!filingId) return { ok: false, status: 400, data: { message: "Filing ID required." } };
+  const response = await apiRequest(`/api/agent/non-patent-filings/${encodeURIComponent(filingId)}`, { method: "GET" });
+  return {
+    ok: response.ok,
+    filing: response.ok ? normalizeAdminFiling(response.data?.data || response.data || {}) : null,
+    status: response.status,
+    data: response.data,
+  };
+}
+
+// PATCH /api/agent/non-patent-filings/{id}/status
+export async function updateAgentNonPatentFilingStatus(filingId = "", status = "", agentNote = "") {
+  const id = String(filingId || "").trim();
+  const nextStatus = String(status || "").trim().toUpperCase();
+  if (!id || !nextStatus) return { ok: false, status: 400, data: { message: "Filing ID and status are required." } };
+  const body = { status: nextStatus };
+  if (agentNote) body.agentNote = agentNote;
+  const response = await apiRequest(`/api/agent/non-patent-filings/${encodeURIComponent(id)}/status`, { method: "PATCH", body });
+  return { ok: response.ok, status: response.status, data: response.data };
 }
 
 function normalizeAdminFiling(item = {}) {
@@ -249,27 +394,9 @@ function extractAdminPageable(data, fallbackPage, fallbackSize, fallbackTotal = 
 }
 
 
-export async function updateAgentPatentStatus(patentId = "", status = "") {
-  const id = String(patentId || "").trim();
-  const nextStatus = String(status || "").trim().toUpperCase();
-  if (!id || !nextStatus) {
-    return {
-      ok: false,
-      status: 400,
-      data: { message: "Patent ID and status are required." },
-    };
-  }
-
-  const response = await apiRequest(`/api/agent/patent/${encodeURIComponent(id)}`, {
-    method: "PUT",
-    body: { status: nextStatus },
-  });
-
-  return {
-    ok: response.ok,
-    status: response.status,
-    data: response.data,
-  };
+// Legacy alias kept for backward-compat – delegates to spec-compliant function
+export async function updateAgentPatentStatus(patentId = "", status = "", agentNote = "") {
+  return updateAgentPatentFilingStatus(patentId, status, agentNote);
 }
 
 export async function submitClientPatent(payload = {}) {

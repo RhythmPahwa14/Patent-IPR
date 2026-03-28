@@ -4,8 +4,8 @@ import { usePathname } from "next/navigation";
 
 const mainNav = [
   { label: "Dashboard", icon: "dashboard", href: "/agent" },
-  { label: "Assigned Cases", icon: "assignment", href: "/agent/cases" },
-  { label: "Review Queue", icon: "rule", href: "/agent/review" },
+  { label: "Patent Filings", icon: "assignment", href: "/agent/cases" },
+  { label: "Non-Patent Filings", icon: "article", href: "/agent/non-patent-cases" },
   { label: "Documents", icon: "description", href: "/agent/documents" },
   { label: "Messages", icon: "mail", href: "/agent/messages" },
 ];

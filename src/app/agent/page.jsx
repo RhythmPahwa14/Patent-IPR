@@ -1,12 +1,12 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { getAgentPatents } from "@/lib/api";
+import { getAgentDashboard, getAgentPatentFilings, getAgentNonPatentFilings } from "@/lib/api";
 
 const STATUS_COLOR = {
   DRAFT: "bg-gray-100 text-gray-700",
   PENDING: "bg-amber-100 text-amber-700",
-  ASSIGNED: "bg-blue-100 text-blue-700",
+  IN_REVIEW: "bg-blue-100 text-blue-700",
   APPROVED: "bg-green-100 text-green-700",
   REJECTED: "bg-red-100 text-red-700",
 };
@@ -18,81 +18,94 @@ function formatDate(value) {
   return dt.toLocaleDateString();
 }
 
-function daysBetween(start, end) {
-  if (!start || !end) return null;
-  const s = new Date(start);
-  const e = new Date(end);
-  if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return null;
-  const diff = Math.abs(e.getTime() - s.getTime());
-  return Math.round(diff / (1000 * 60 * 60 * 24));
-}
-
 export default function AgentDashboardPage() {
-  const [assignments, setAssignments] = useState([]);
+  const [dashStats, setDashStats] = useState(null);
+  const [recentPatents, setRecentPatents] = useState([]);
+  const [recentNonPatents, setRecentNonPatents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const loadAssignments = async () => {
+    const load = async () => {
       setLoading(true);
       setError("");
-      const result = await getAgentPatents();
-      if (!result.ok) {
-        setError(result.data?.message || "Unable to load assigned cases.");
-        setAssignments([]);
-        setLoading(false);
-        return;
+
+      const [dashResult, patentResult, nonPatentResult] = await Promise.all([
+        getAgentDashboard(),
+        getAgentPatentFilings({ page: 0, size: 6, sort: "assignedAt,desc" }),
+        getAgentNonPatentFilings({ page: 0, size: 4, sort: "assignedAt,desc" }),
+      ]);
+
+      if (dashResult.ok) {
+        setDashStats(dashResult.stats);
+      } else {
+        setError(dashResult.data?.message || "Unable to load dashboard.");
       }
 
-      setAssignments(result.items || []);
+      setRecentPatents(patentResult.items || []);
+      setRecentNonPatents(nonPatentResult.items || []);
       setLoading(false);
     };
 
-    loadAssignments();
+    load();
   }, []);
 
+  const patentFilings = dashStats?.assignedPatentFilings || { total: 0, byStatus: {} };
+  const nonPatentFilings = dashStats?.assignedNonPatentFilings || { total: 0, byStatus: {} };
+
   const stats = useMemo(() => {
-    const total = assignments.length;
-    const active = assignments.filter((f) => ["PENDING", "ASSIGNED"].includes(f.status)).length;
-    const approved = assignments.filter((f) => f.status === "APPROVED").length;
-    const rejected = assignments.filter((f) => f.status === "REJECTED").length;
+    const patentTotal = patentFilings.total;
+    const nonPatentTotal = nonPatentFilings.total;
+    const totalAll = patentTotal + nonPatentTotal;
+
+    const patentByStatus = patentFilings.byStatus || {};
+    const nonPatentByStatus = nonPatentFilings.byStatus || {};
+
+    const inReview = (patentByStatus.IN_REVIEW || 0) + (nonPatentByStatus.IN_REVIEW || 0);
+    const approved = (patentByStatus.APPROVED || 0) + (nonPatentByStatus.APPROVED || 0);
+    const pending = (patentByStatus.PENDING || 0) + (nonPatentByStatus.PENDING || 0);
+    const rejected = (patentByStatus.REJECTED || 0) + (nonPatentByStatus.REJECTED || 0);
 
     return [
       {
         icon: "assignment",
         label: "TOTAL ASSIGNED",
-        value: String(total),
-        badge: total > 0 ? "Live" : "No data",
-        badgeColor: total > 0 ? "text-green-600" : "text-gray-500",
+        value: String(totalAll),
+        sub: `${patentTotal} patent · ${nonPatentTotal} non-patent`,
+        badge: totalAll > 0 ? "Live" : "No data",
+        badgeColor: totalAll > 0 ? "text-green-600" : "text-gray-500",
+      },
+      {
+        icon: "pending_actions",
+        label: "PENDING",
+        value: String(pending),
+        sub: "Awaiting review",
+        badge: "Queue",
+        badgeColor: "text-amber-600",
       },
       {
         icon: "rule",
         label: "IN REVIEW",
-        value: String(active),
-        badge: "Queue",
-        badgeColor: "text-amber-600",
+        value: String(inReview),
+        sub: "Being processed",
+        badge: "Active",
+        badgeColor: "text-blue-600",
       },
       {
         icon: "verified",
         label: "APPROVED",
         value: String(approved),
+        sub: `${rejected} rejected`,
         badge: approved > 0 ? "Closed" : "No data",
         badgeColor: approved > 0 ? "text-green-600" : "text-gray-500",
         highlight: true,
       },
-      {
-        icon: "cancel",
-        label: "REJECTED",
-        value: String(rejected),
-        badge: rejected > 0 ? "Action" : "No data",
-        badgeColor: rejected > 0 ? "text-red-500" : "text-gray-500",
-      },
     ];
-  }, [assignments]);
+  }, [dashStats]);
 
   const reviewQueue = useMemo(() => {
-    return assignments
-      .filter((f) => ["PENDING", "ASSIGNED"].includes(f.status))
+    return recentPatents
+      .filter((f) => ["PENDING", "IN_REVIEW"].includes(f.status))
       .slice(0, 6)
       .map((f) => ({
         id: f.referenceNumber || f.patentId || f.id,
@@ -101,32 +114,37 @@ export default function AgentDashboardPage() {
         status: f.status || "PENDING",
         statusColor: STATUS_COLOR[f.status] || "bg-gray-100 text-gray-700",
         updated: formatDate(f.submittedAt),
+        type: "Patent",
       }));
-  }, [assignments]);
+  }, [recentPatents]);
 
   const recentDecisions = useMemo(() => {
-    return assignments
+    const patentDecisions = recentPatents
       .filter((f) => ["APPROVED", "REJECTED"].includes(f.status))
-      .slice(0, 4)
+      .slice(0, 3)
       .map((f) => ({
         id: f.referenceNumber || f.patentId || f.id,
-        title: f.title || "Untitled Filing",
-        status: f.status || "APPROVED",
+        title: f.title || "Untitled",
+        status: f.status,
         statusColor: STATUS_COLOR[f.status] || "bg-gray-100 text-gray-700",
         updated: formatDate(f.updatedAt || f.submittedAt),
+        type: "Patent",
       }));
-  }, [assignments]);
 
-  const averageDecisionTime = useMemo(() => {
-    const closed = assignments.filter((f) => ["APPROVED", "REJECTED"].includes(f.status));
-    if (closed.length === 0) return "-";
-    const totalDays = closed.reduce((acc, item) => {
-      const delta = daysBetween(item.submittedAt, item.updatedAt);
-      return acc + (delta ?? 0);
-    }, 0);
-    const avg = totalDays / closed.length;
-    return Number.isFinite(avg) ? `${Math.round(avg)} days` : "-";
-  }, [assignments]);
+    const npDecisions = recentNonPatents
+      .filter((f) => ["APPROVED", "REJECTED"].includes(f.status))
+      .slice(0, 2)
+      .map((f) => ({
+        id: f.referenceNumber || f.id,
+        title: f.title || f.referenceNumber || "Untitled",
+        status: f.status,
+        statusColor: STATUS_COLOR[f.status] || "bg-gray-100 text-gray-700",
+        updated: formatDate(f.updatedAt || f.submittedAt),
+        type: f.type || "Non-Patent",
+      }));
+
+    return [...patentDecisions, ...npDecisions].slice(0, 5);
+  }, [recentPatents, recentNonPatents]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -145,35 +163,70 @@ export default function AgentDashboardPage() {
               <span className={`text-xs font-semibold ${s.badgeColor}`}>{s.badge}</span>
             </div>
             <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1">{s.label}</p>
-            <p className="text-3xl font-bold text-[#0d1b2a]">{s.value}</p>
+            <p className="text-3xl font-bold text-[#0d1b2a]">{loading ? "—" : s.value}</p>
+            {s.sub && <p className="text-[10px] text-gray-400 mt-1">{s.sub}</p>}
           </div>
         ))}
+      </div>
+
+      {/* Breakdown by filing type */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <h3 className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-4">Patent Filings Breakdown</h3>
+          <div className="space-y-2">
+            {Object.entries(patentFilings.byStatus || {}).length === 0 ? (
+              <p className="text-xs text-gray-400">No data available.</p>
+            ) : (
+              Object.entries(patentFilings.byStatus || {}).map(([status, count]) => (
+                <div key={status} className="flex items-center justify-between">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded tracking-wider ${STATUS_COLOR[status] || "bg-gray-100 text-gray-700"}`}>{status}</span>
+                  <span className="text-sm font-semibold text-[#0d1b2a]">{count}</span>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+            <span className="text-xs text-gray-400">Total Patent Filings</span>
+            <span className="text-sm font-bold text-[#0d1b2a]">{loading ? "—" : patentFilings.total}</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-100 p-5">
+          <h3 className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-4">Non-Patent Filings Breakdown</h3>
+          <div className="space-y-2">
+            {Object.entries(nonPatentFilings.byStatus || {}).length === 0 ? (
+              <p className="text-xs text-gray-400">No data available.</p>
+            ) : (
+              Object.entries(nonPatentFilings.byStatus || {}).map(([status, count]) => (
+                <div key={status} className="flex items-center justify-between">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded tracking-wider ${STATUS_COLOR[status] || "bg-gray-100 text-gray-700"}`}>{status}</span>
+                  <span className="text-sm font-semibold text-[#0d1b2a]">{count}</span>
+                </div>
+              ))
+            )}
+          </div>
+          <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+            <span className="text-xs text-gray-400">Total Non-Patent Filings</span>
+            <span className="text-sm font-bold text-[#0d1b2a]">{loading ? "—" : nonPatentFilings.total}</span>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100">
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
             <div>
-              <h2 className="text-base font-bold text-[#0d1b2a]">Review Queue</h2>
-              <p className="text-xs text-gray-400">Priority cases awaiting decision.</p>
+              <h2 className="text-base font-bold text-[#0d1b2a]">Patent Review Queue</h2>
+              <p className="text-xs text-gray-400">Assigned patent filings awaiting action.</p>
             </div>
-            <Link href="/agent/review" className="text-xs font-semibold text-[#f5a623] hover:text-[#0d1b2a] transition-colors">Open Queue</Link>
+            <Link href="/agent/cases" className="text-xs font-semibold text-[#f5a623] hover:text-[#0d1b2a] transition-colors">All Cases</Link>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100">
-                  {[
-                    "Case ID",
-                    "Title",
-                    "Applicant",
-                    "Status",
-                    "Submitted",
-                    "",
-                  ].map((h) => (
-                    <th key={h} className="text-left text-[10px] font-semibold tracking-widest text-gray-400 uppercase px-6 py-3">
-                      {h}
-                    </th>
+                  {["Case ID", "Title", "Applicant", "Status", "Submitted", ""].map((h) => (
+                    <th key={h} className="text-left text-[10px] font-semibold tracking-widest text-gray-400 uppercase px-6 py-3">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -194,16 +247,12 @@ export default function AgentDashboardPage() {
                 ))}
                 {!loading && reviewQueue.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-400">
-                      No active cases in your queue.
-                    </td>
+                    <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-400">No active patent filings in your queue.</td>
                   </tr>
                 )}
                 {loading && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-400">
-                      Loading queue...
-                    </td>
+                    <td colSpan={6} className="px-6 py-12 text-center text-sm text-gray-400">Loading queue...</td>
                   </tr>
                 )}
               </tbody>
@@ -213,21 +262,22 @@ export default function AgentDashboardPage() {
 
         <div className="space-y-4">
           <div className="bg-white rounded-xl border border-gray-100 p-5">
-            <h3 className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-3">Decision Rhythm</h3>
+            <h3 className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-3">Recent Non-Patent Filings</h3>
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">Average decision time</span>
-                <span className="text-sm font-semibold text-[#0d1b2a]">{averageDecisionTime}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">Active queue</span>
-                <span className="text-sm font-semibold text-[#0d1b2a]">{reviewQueue.length}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">Resolved this cycle</span>
-                <span className="text-sm font-semibold text-[#0d1b2a]">{recentDecisions.length}</span>
-              </div>
+              {recentNonPatents.slice(0, 4).map((item) => (
+                <div key={item.id} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-[#0d1b2a]">{item.referenceNumber || item.id}</p>
+                    <p className="text-[10px] text-gray-400">{item.type || "N/A"}</p>
+                  </div>
+                  <span className={`text-[9px] font-bold px-2 py-1 rounded ${STATUS_COLOR[item.status] || "bg-gray-100 text-gray-700"}`}>{item.status || "-"}</span>
+                </div>
+              ))}
+              {recentNonPatents.length === 0 && !loading && (
+                <p className="text-xs text-gray-400">No non-patent filings assigned.</p>
+              )}
             </div>
+            <Link href="/agent/non-patent-cases" className="mt-4 text-xs font-semibold text-[#f5a623] hover:text-[#0d1b2a] block transition-colors">View all →</Link>
           </div>
 
           <div className="bg-white rounded-xl border border-gray-100 p-5">
