@@ -32,60 +32,48 @@ function CertificateGalleryCard({ item, index }) {
       style={{
         transitionDelay: `${index * 100}ms`,
         opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(30px)",
-        transition: "opacity 0.55s ease, transform 0.55s ease",
+        transform: visible ? "translateY(0)" : "translateY(20px)",
+        transition: "opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)",
       }}
-      className="w-full max-w-[320px] mx-auto bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-3 shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.10)] hover:-translate-y-1 transition-all duration-300"
+      className="w-full max-w-sm mx-auto bg-white rounded-3xl p-6 flex flex-col gap-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="font-black text-[#0d1b2a] text-sm leading-tight">
+          <div className="font-bold text-slate-900 text-lg tracking-tight mb-1">
             {item.title}
           </div>
-          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mt-0.5">
-            Client Success Story
+          <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+            Client Success
           </div>
         </div>
-        <span className="bg-[#4a7c59] text-white text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full whitespace-nowrap">
+        <span className="bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full shrink-0">
           Verified
         </span>
       </div>
 
-      <div className="rounded-xl overflow-hidden border-2 border-[#d6b24b] bg-[#f6f2e5] w-full max-w-[240px] mx-auto">
+      <div className="rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center w-full aspect-video border border-gray-100 relative">
+        <span className="material-symbols-outlined text-4xl text-gray-300 absolute">image</span>
+        {/* 
+          Using regular img tag for placeholder. In real app with valid path, Next image is better. 
+          Fallbacks gracefully if /001.jpg is not present. 
+        */}
         <Image
           src={item.image}
           alt={item.title}
-          width={240}
-          height={120}
-          className="w-full h-auto object-cover"
-          priority
+          fill
+          className="object-cover relative z-10"
+          onError={(e) => { e.currentTarget.style.display = 'none'; }}
         />
       </div>
 
-      <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 flex flex-col gap-1">
-        <div className="text-[10px] text-gray-400 uppercase tracking-widest">Description</div>
-        <div className="text-xs font-semibold text-[#0d1b2a]">
+      <div className="bg-blue-50/50 border border-blue-100/50 rounded-2xl p-4 flex flex-col gap-2">
+        <div className="flex items-center gap-1.5">
+           <span className="material-symbols-outlined text-blue-500 text-sm">info</span>
+           <div className="text-[10px] text-blue-500 font-bold uppercase tracking-widest">Description</div>
+        </div>
+        <div className="text-sm font-medium text-slate-800 leading-relaxed">
           {item.note}
         </div>
-      </div>
-
-      <div className="flex items-center gap-2 text-[#4a7c59]">
-        <svg
-          className="w-4 h-4 shrink-0"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2.2}
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M4.5 12.75l6 6 9-13.5"
-          />
-        </svg>
-        <span className="text-[10px] font-semibold uppercase tracking-widest">
-          Verified Client Patent Certificate
-        </span>
       </div>
     </div>
   );
@@ -107,32 +95,32 @@ export default function SuccessStories() {
   }, []);
 
   return (
-    <section id="success-stories" className="py-24 bg-[#f3f4f6]">
+    <section id="success-stories" className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-6">
         <div
           ref={headingRef}
           style={{
             opacity: headingVisible ? 1 : 0,
             transform: headingVisible ? "translateY(0)" : "translateY(24px)",
-            transition: "opacity 0.5s ease, transform 0.5s ease",
+            transition: "opacity 0.6s ease, transform 0.6s ease",
           }}
-          className="text-center mb-12"
+          className="text-center mb-16 flex flex-col items-center"
         >
-          <div className="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-1.5 mb-4">
-            <span className="w-2 h-2 rounded-full bg-[#f5a623]" />
-            <span className="text-xs font-semibold uppercase tracking-widest text-[#0d1b2a]">
-              Success Stories
+          <div className="inline-flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-full px-4 py-2 mb-6 shadow-sm">
+            <span className="material-symbols-outlined text-green-500 text-sm">verified</span>
+            <span className="text-xs font-bold uppercase tracking-wide text-gray-700">
+              Proof of work
             </span>
           </div>
-          <h2 className="text-4xl font-black text-[#0d1b2a] mb-4">
-            Client Patent Certifications
+          <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6 tracking-tight leading-tight">
+            Client Certifications
           </h2>
-          <p className="text-gray-500 text-base max-w-xl mx-auto leading-relaxed">
-            Certificates granted to clients we helped file and prosecute.
+          <p className="text-gray-500 text-lg font-medium max-w-2xl mx-auto tracking-tight">
+            Real achievements granted to clients we helped file and successfully prosecute on the platform.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 gap-6">
           {certificateGallery.map((item, i) => (
             <CertificateGalleryCard key={item.id} item={item} index={i} />
           ))}

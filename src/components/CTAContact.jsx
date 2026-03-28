@@ -32,173 +32,163 @@ export default function CTAContact() {
   };
 
   return (
-    <section id="contact" className="py-24 bg-[#f7f7f8]">
-      <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-10 items-start">
-        {/* Left */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-8">
-          <div className="inline-flex items-center gap-2 bg-[#fff7e8] border border-[#f5a623]/30 rounded-full px-4 py-1.5 mb-5">
-            <span className="w-2 h-2 rounded-full bg-[#f5a623]" />
-            <span className="text-xs font-semibold uppercase tracking-widest text-[#0d1b2a]">
-              PATENT-IPR Helpdesk
-            </span>
-          </div>
-
-          <h2 className="text-3xl md:text-4xl font-black text-[#0d1b2a] leading-tight mb-4">
-            Start Your IP Filing with a Professional Team
-          </h2>
-          <p className="text-gray-600 text-base leading-relaxed mb-7">
-            PATENT-IPR supports startups, SMEs, research groups, and enterprises
-            with structured filing workflows for patents, trademarks, designs,
-            and copyright across India.
-          </p>
-
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-              <p className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold">
-                Response Window
-              </p>
-              <p className="text-sm font-bold text-[#0d1b2a] mt-1">Within 1 business day</p>
+    <section id="contact" className="py-24 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="bg-[#F4F5F7] rounded-[3rem] p-8 md:p-16 grid md:grid-cols-2 gap-12 lg:gap-20 items-start">
+          {/* Left */}
+          <div className="flex flex-col gap-6">
+            <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full w-max shadow-sm border border-gray-100">
+              <span className="material-symbols-outlined text-sm text-blue-500">support_agent</span>
+              <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+                Helpdesk
+              </span>
             </div>
-            <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-              <p className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold">
-                Consultation Hours
-              </p>
-              <p className="text-sm font-bold text-[#0d1b2a] mt-1">Mon-Sat, 10:00 AM-6:00 PM IST</p>
-            </div>
-          </div>
-        </div>
 
-        {/* Right – Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white border border-gray-200 rounded-2xl p-8 flex flex-col gap-4"
-        >
-          <div>
-            <h3 className="text-xl font-bold text-[#0d1b2a]">Request a Consultation</h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Share your requirement. Our team will contact you with scope,
-              process, and next steps.
+            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight tracking-tight">
+              Start your IP filing with a professional team
+            </h2>
+            <p className="text-gray-500 text-lg font-medium leading-relaxed">
+              PATENT-IPR supports startups, SMEs, research groups, and enterprises
+              with structured filing workflows for patents, trademarks, designs,
+              and copyright across India.
             </p>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
-                Full Name
-              </label>
-              <input
-                type="text"
-                name="fullName"
-                placeholder="Enter your full name"
-                value={form.fullName}
-                onChange={handleChange}
-                className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-[#0d1b2a] focus:outline-none focus:border-[#f5a623] transition-colors"
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
-                Organization
-              </label>
-              <input
-                type="text"
-                name="organization"
-                placeholder="Company / Startup / Institute"
-                value={form.organization}
-                onChange={handleChange}
-                className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-[#0d1b2a] focus:outline-none focus:border-[#f5a623] transition-colors"
-              />
+            <div className="flex flex-col sm:flex-row gap-4 mt-4">
+              <div className="rounded-2xl border border-black/[0.04] bg-white flex-1 p-5 shadow-sm">
+                <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">
+                  Response Window
+                </p>
+                <p className="text-sm font-bold text-slate-900">Within 1 business day</p>
+              </div>
+              <div className="rounded-2xl border border-black/[0.04] bg-white flex-1 p-5 shadow-sm">
+                <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">
+                  Consultation Hours
+                </p>
+                <p className="text-sm font-bold text-slate-900">Mon-Sat, 10am - 6pm</p>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
-                Email
-              </label>
-              <input
-                type="email"
-                name="email"
-                placeholder="name@example.com"
-                value={form.email}
-                onChange={handleChange}
-                className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-[#0d1b2a] focus:outline-none focus:border-[#f5a623] transition-colors"
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
-                Phone (India)
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                placeholder="+91 98765 43210"
-                value={form.phone}
-                onChange={handleChange}
-                className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-[#0d1b2a] focus:outline-none focus:border-[#f5a623] transition-colors"
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
-                Service Needed
-              </label>
-              <select
-                name="service"
-                value={form.service}
-                onChange={handleChange}
-                className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-[#0d1b2a] focus:outline-none focus:border-[#f5a623] transition-colors bg-white"
-              >
-                {services.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
-              City / State
-            </label>
-            <input
-              type="text"
-              name="city"
-              placeholder="e.g. Chandigarh, Punjab"
-              value={form.city}
-              onChange={handleChange}
-              className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-[#0d1b2a] focus:outline-none focus:border-[#f5a623] transition-colors"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
-              Message
-            </label>
-            <textarea
-              name="message"
-              placeholder="Briefly describe your idea, current filing stage, and what support you need."
-              value={form.message}
-              onChange={handleChange}
-              rows={4}
-              className="border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-[#0d1b2a] focus:outline-none focus:border-[#f5a623] transition-colors resize-none"
-            />
-          </div>
-
-          <p className="text-[11px] text-gray-500 leading-relaxed">
-            By submitting this form, you agree to be contacted regarding your
-            IP filing query and service requirements.
-          </p>
-
-          <button
-            type="submit"
-            className="w-full bg-[#0d1b2a] text-white font-semibold py-3.5 rounded-lg hover:bg-[#1a2f4a] transition-colors text-sm tracking-wide"
+          {/* Right – Form */}
+          <form
+            onSubmit={handleSubmit}
+            className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col gap-5"
           >
-            Submit Request
-          </button>
-        </form>
+            <div className="mb-2">
+              <h3 className="text-2xl font-bold text-slate-900 tracking-tight">Request a Consultation</h3>
+              <p className="text-[15px] font-medium text-gray-500 mt-2 leading-relaxed">
+                Share your requirement. Our team will contact you with scope,
+                process, and next steps.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-5">
+              <div className="flex flex-col gap-2">
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  name="fullName"
+                  placeholder="Your name"
+                  value={form.fullName}
+                  onChange={handleChange}
+                  className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all"
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">
+                  Organization
+                </label>
+                <input
+                  type="text"
+                  name="organization"
+                  placeholder="Company/Startup"
+                  value={form.organization}
+                  onChange={handleChange}
+                  className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-5">
+              <div className="flex flex-col gap-2">
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="name@example.com"
+                  value={form.email}
+                  onChange={handleChange}
+                  className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all"
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">
+                  Phone (India)
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  placeholder="+91 98765 43210"
+                  value={form.phone}
+                  onChange={handleChange}
+                  className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+               <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">
+                  Service Needed
+               </label>
+               <select
+                 name="service"
+                 value={form.service}
+                 onChange={handleChange}
+                 className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all appearance-none"
+               >
+                 {services.map((s) => (
+                   <option key={s} value={s}>
+                     {s}
+                   </option>
+                 ))}
+               </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">
+                Message
+              </label>
+              <textarea
+                name="message"
+                placeholder="Briefly describe your idea, current stage, and what support you need."
+                value={form.message}
+                onChange={handleChange}
+                rows={3}
+                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all resize-none"
+              />
+            </div>
+
+            <div className="mt-2">
+              <button
+                type="submit"
+                className="w-full bg-slate-900 text-white font-bold py-4 rounded-xl hover:bg-black transition-colors text-[15px] tracking-wide shadow-lg hover:-translate-y-0.5"
+              >
+                Submit Request
+              </button>
+            </div>
+            
+            <p className="text-[11px] font-medium text-gray-400 text-center mt-2 px-4 leading-relaxed">
+               By submitting, you agree to be contacted regarding your query and service requirements.
+            </p>
+          </form>
+        </div>
       </div>
     </section>
   );

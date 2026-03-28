@@ -22,33 +22,33 @@ export default function FAQ() {
   return (
     <section id="pricing" className="py-24 bg-white">
       <div className="max-w-3xl mx-auto px-6">
-        <h2 className="text-4xl font-black text-[#0d1b2a] text-center mb-14">
-          Frequently Asked Questions
+        <h2 className="text-4xl md:text-5xl font-bold text-slate-900 text-center mb-14 tracking-tight leading-tight">
+          Frequently asked questions
         </h2>
 
         <div className="flex flex-col gap-4">
           {faqs.map((faq, i) => (
             <div
               key={i}
-              className="border border-gray-200 rounded-2xl overflow-hidden hover:border-[#f5a623] transition-colors"
+              className="bg-gray-50/50 border border-gray-100 rounded-[1.5rem] overflow-hidden hover:bg-gray-50 transition-colors"
             >
               <button
-                className="w-full flex items-center justify-between px-7 py-5 text-left"
+                className="w-full flex items-center justify-between px-8 py-6 text-left group"
                 onClick={() => setOpen(open === i ? null : i)}
               >
-                <span className="font-semibold text-[#0d1b2a] text-base pr-4">
+                <span className="font-bold text-slate-900 text-lg pr-4 tracking-tight group-hover:text-blue-600 transition-colors">
                   {faq.q}
                 </span>
                 <span
-                  className={`w-6 h-6 flex items-center justify-center rounded-full border-2 border-gray-300 text-gray-400 text-sm shrink-0 transition-transform ${
-                    open === i ? "rotate-180 border-[#f5a623] text-[#f5a623]" : ""
+                  className={`w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm border border-gray-100 text-gray-500 shrink-0 transition-transform ${
+                    open === i ? "rotate-180 bg-blue-50 border-blue-100 text-blue-600" : ""
                   }`}
                 >
-                  ↓
+                  <span className="material-symbols-outlined text-[18px]">expand_more</span>
                 </span>
               </button>
               {open === i && (
-                <div className="px-7 pb-5 text-gray-500 text-sm leading-relaxed">
+                <div className="px-8 pb-8 pt-2 text-gray-500 text-[15px] font-medium leading-relaxed">
                   {faq.a}
                 </div>
               )}
