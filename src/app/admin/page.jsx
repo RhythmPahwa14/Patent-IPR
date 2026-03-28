@@ -1,14 +1,17 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  assignAdminFiling,
-  getAdminAgents,
   getAdminDashboard,
-  reassignAdminFiling,
-  updateAdminFilingStatus,
+  getAdminPatentFilings,
+  getAdminNonPatentFilings,
+  getAdminAgents,
+  assignAdminPatentFiling,
+  assignAdminNonPatentFiling,
+  updateAdminPatentFilingStatus,
+  updateAdminNonPatentFilingStatus,
 } from "@/lib/api";
 
-const STATUS_OPTIONS = ["DRAFT", "PENDING", "APPROVED", "REJECTED"];
+const STATUS_OPTIONS = ["PENDING", "IN_REVIEW", "APPROVED", "REJECTED"];
 
 function formatDate(value) {
   if (!value) return "-";
@@ -17,177 +20,126 @@ function formatDate(value) {
   return dt.toLocaleDateString();
 }
 
+function StatCard({ label, value, sub }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 p-5">
+      <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1">{label}</p>
+      <p className="text-3xl font-bold text-[#10243a]">{value ?? 0}</p>
+      {sub && <p className="text-xs text-gray-500 mt-1">{sub}</p>}
+    </div>
+  );
+}
+
 export default function AdminDashboardPage() {
-  const [filings, setFilings] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [patentFilings, setPatentFilings] = useState([]);
+  const [nonPatentFilings, setNonPatentFilings] = useState([]);
   const [agents, setAgents] = useState([]);
-  const [statusFilter, setStatusFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
-  const [unassignedOnly, setUnassignedOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [busyFilingId, setBusyFilingId] = useState("");
-  const [dashboardStats, setDashboardStats] = useState({
-    totalFilings: 0,
-    unassigned: 0,
-    inProgress: 0,
-    decided: 0,
-  });
+  const [busyId, setBusyId] = useState("");
 
   const loadData = async () => {
     setLoading(true);
     setError("");
 
-    const [dashboardRes, agentsRes] = await Promise.all([
-      getAdminDashboard({
-        page: 0,
-        size: 10,
-        status: statusFilter || undefined,
-        type: typeFilter || undefined,
-        unassigned: unassignedOnly,
-      }),
+    const [dashRes, patentRes, nonPatentRes, agentsRes] = await Promise.all([
+      getAdminDashboard(),
+      getAdminPatentFilings({ page: 0, size: 5, sort: "submittedAt,desc" }),
+      getAdminNonPatentFilings({ page: 0, size: 5, sort: "submittedAt,desc" }),
       getAdminAgents(),
     ]);
 
-    if (!dashboardRes.ok) {
-      setError(dashboardRes.data?.message || "Unable to load admin filings.");
-      setFilings([]);
-      setDashboardStats({
-        totalFilings: 0,
-        unassigned: 0,
-        inProgress: 0,
-        decided: 0,
-      });
+    if (!dashRes.ok) {
+      setError(dashRes.data?.message || "Unable to load dashboard stats.");
     } else {
-      setFilings(dashboardRes.items || []);
-      setDashboardStats(dashboardRes.stats || {
-        totalFilings: 0,
-        unassigned: 0,
-        inProgress: 0,
-        decided: 0,
-      });
+      setStats(dashRes.stats);
     }
 
-    if (!agentsRes.ok) {
-      setError((prev) => prev || agentsRes.data?.message || "Unable to load assignable agents.");
-      setAgents([]);
-    } else {
-      setAgents(agentsRes.items || []);
-    }
-
+    setPatentFilings(patentRes.items || []);
+    setNonPatentFilings(nonPatentRes.items || []);
+    setAgents(agentsRes.items || []);
     setLoading(false);
   };
 
   useEffect(() => {
     loadData();
-  }, [statusFilter, typeFilter, unassignedOnly]);
+  }, []);
 
-  const stats = useMemo(() => {
-    const fallback = {
-      totalFilings: filings.length,
-      unassigned: filings.filter((item) => !item.assignedAgentId).length,
-      inProgress: filings.filter((item) => item.status === "PENDING").length,
-      decided: filings.filter((item) => ["APPROVED", "REJECTED"].includes(item.status)).length,
-    };
-
-    return {
-      total: dashboardStats.totalFilings ?? fallback.totalFilings,
-      unassigned: dashboardStats.unassigned ?? fallback.unassigned,
-      inProgress: dashboardStats.inProgress ?? fallback.inProgress,
-      completed: dashboardStats.decided ?? fallback.decided,
-    };
-  }, [dashboardStats, filings]);
-
-  const handleAssignAction = async (filing, nextAgentId) => {
-    if (!nextAgentId) return;
-    setBusyFilingId(filing.id);
-
-    const action = filing.assignedAgentId ? reassignAdminFiling : assignAdminFiling;
-    const response = await action(filing.id, nextAgentId);
-
-    if (!response.ok) {
-      setError(response.data?.message || "Unable to update assignment.");
-      setBusyFilingId("");
-      return;
-    }
-
+  const handlePatentAssign = async (filingId, agentId) => {
+    if (!agentId) return;
+    setBusyId(filingId);
+    await assignAdminPatentFiling(filingId, agentId);
     await loadData();
-    setBusyFilingId("");
+    setBusyId("");
   };
 
-  const handleStatusAction = async (filingId, nextStatus) => {
-    if (!nextStatus) return;
-    setBusyFilingId(filingId);
-
-    const response = await updateAdminFilingStatus(filingId, nextStatus);
-    if (!response.ok) {
-      setError(response.data?.message || "Unable to update filing status.");
-      setBusyFilingId("");
-      return;
-    }
-
+  const handleNonPatentAssign = async (filingId, agentId) => {
+    if (!agentId) return;
+    setBusyId(filingId);
+    await assignAdminNonPatentFiling(filingId, agentId);
     await loadData();
-    setBusyFilingId("");
+    setBusyId("");
   };
+
+  const handlePatentStatus = async (filingId, status) => {
+    if (!status) return;
+    setBusyId(filingId);
+    await updateAdminPatentFilingStatus(filingId, status);
+    await loadData();
+    setBusyId("");
+  };
+
+  const handleNonPatentStatus = async (filingId, status) => {
+    if (!status) return;
+    setBusyId(filingId);
+    await updateAdminNonPatentFilingStatus(filingId, status);
+    await loadData();
+    setBusyId("");
+  };
+
+  const byStatus = (obj = {}) =>
+    Object.entries(obj)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(" · ") || "—";
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-[#10243a]">Admin Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Monitor filings, assign agents, and take approval decisions.</p>
+        <p className="text-sm text-gray-500 mt-0.5">System overview — users, filings, and agent workload.</p>
       </div>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1">Total Filings</p>
-          <p className="text-3xl font-bold text-[#10243a]">{stats.total}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1">Unassigned</p>
-          <p className="text-3xl font-bold text-[#10243a]">{stats.unassigned}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1">In Progress</p>
-          <p className="text-3xl font-bold text-[#10243a]">{stats.inProgress}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <p className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase mb-1">Decided</p>
-          <p className="text-3xl font-bold text-[#10243a]">{stats.completed}</p>
+      {/* ── User stats ── */}
+      <div>
+        <h2 className="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-3">Users</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <StatCard label="Total Users" value={stats?.users?.total} />
+          <StatCard label="Clients" value={stats?.users?.clients} />
+          <StatCard label="Agents" value={stats?.users?.agents} />
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
-        <select
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="">All statuses</option>
-          {STATUS_OPTIONS.map((status) => (
-            <option key={status} value={status}>{status}</option>
-          ))}
-        </select>
+      {/* ── Filing stats ── */}
+      <div>
+        <h2 className="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-3">Patent Filings</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
+          <StatCard label="Total Patent Filings" value={stats?.patentFilings?.total} />
+          <StatCard label="By Status" value={null} sub={byStatus(stats?.patentFilings?.byStatus)} />
+        </div>
+      </div>
 
-        <select
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-        >
-          <option value="">All types</option>
-          <option value="patent">Patent</option>
-          <option value="nonPatent">Non-Patent</option>
-        </select>
+      <div>
+        <h2 className="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-3">Non-Patent Filings</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-2 gap-4">
+          <StatCard label="Total Non-Patent Filings" value={stats?.nonPatentFilings?.total} />
+          <StatCard label="By Status" value={null} sub={byStatus(stats?.nonPatentFilings?.byStatus)} />
+        </div>
+      </div>
 
-        <label className="flex items-center gap-2 text-sm text-gray-600 px-1">
-          <input
-            type="checkbox"
-            checked={unassignedOnly}
-            onChange={(e) => setUnassignedOnly(e.target.checked)}
-          />
-          Unassigned only
-        </label>
-
+      <div className="flex justify-end">
         <button
           onClick={loadData}
           className="bg-[#10243a] text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-[#1a3655] transition-colors"
@@ -196,82 +148,114 @@ export default function AdminDashboardPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 overflow-x-auto">
-        <table className="w-full text-sm min-w-[1000px]">
-          <thead>
-            <tr className="border-b border-gray-100">
-              {[
-                "Filing ID",
-                "Title",
-                "Type",
-                "Status",
-                "Agent",
-                "Assign/Reassign",
-                "Decision",
-                "Submitted",
-              ].map((head) => (
-                <th key={head} className="text-left text-[10px] font-semibold tracking-widest text-gray-400 uppercase px-5 py-3">
-                  {head}
-                </th>
+      {/* ── Recent Patent Filings ── */}
+      <div>
+        <h2 className="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-3">Recent Patent Filings</h2>
+        <div className="bg-white rounded-xl border border-gray-100 overflow-x-auto">
+          <table className="w-full text-sm min-w-[1000px]">
+            <thead>
+              <tr className="border-b border-gray-100">
+                {["Reference", "Title", "Status", "Agent", "Assign Agent", "Update Status", "Submitted"].map((h) => (
+                  <th key={h} className="text-left text-[10px] font-semibold tracking-widest text-gray-400 uppercase px-5 py-3">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {loading && (
+                <tr><td colSpan={7} className="px-5 py-10 text-center text-sm text-gray-400">Loading...</td></tr>
+              )}
+              {!loading && patentFilings.map((item) => (
+                <tr key={item.id} className="border-b border-gray-50">
+                  <td className="px-5 py-4 text-xs font-semibold text-[#10243a]">{item.referenceNumber || item.id || "-"}</td>
+                  <td className="px-5 py-4 text-sm font-semibold text-[#10243a]">{item.title || "Untitled"}</td>
+                  <td className="px-5 py-4 text-xs text-gray-700">{item.status || "-"}</td>
+                  <td className="px-5 py-4 text-xs text-gray-600">{item.assignedAgentName || item.assignedAgentId || "Unassigned"}</td>
+                  <td className="px-5 py-4">
+                    <select
+                      className="border border-gray-200 rounded-md px-2 py-1 text-xs"
+                      defaultValue=""
+                      onChange={(e) => handlePatentAssign(item.id, e.target.value)}
+                      disabled={busyId === item.id}
+                    >
+                      <option value="">Select agent</option>
+                      {agents.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-5 py-4">
+                    <select
+                      className="border border-gray-200 rounded-md px-2 py-1 text-xs"
+                      defaultValue=""
+                      onChange={(e) => handlePatentStatus(item.id, e.target.value)}
+                      disabled={busyId === item.id || item.status === "DRAFT"}
+                    >
+                      <option value="">Update status</option>
+                      {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-5 py-4 text-xs text-gray-500">{formatDate(item.submittedAt)}</td>
+                </tr>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filings.map((item) => (
-              <tr key={item.id} className="border-b border-gray-50">
-                <td className="px-5 py-4 text-xs font-semibold text-[#10243a]">{item.id || "-"}</td>
-                <td className="px-5 py-4 text-sm font-semibold text-[#10243a]">{item.title || "Untitled Filing"}</td>
-                <td className="px-5 py-4 text-xs text-gray-600">{item.type || "-"}</td>
-                <td className="px-5 py-4 text-xs text-gray-700">{item.status || "-"}</td>
-                <td className="px-5 py-4 text-xs text-gray-600">
-                  {item.assignedAgentName || item.assignedAgentId || "Unassigned"}
-                </td>
-                <td className="px-5 py-4">
-                  <select
-                    className="border border-gray-200 rounded-md px-2 py-1 text-xs"
-                    defaultValue=""
-                    onChange={(e) => handleAssignAction(item, e.target.value)}
-                    disabled={busyFilingId === item.id}
-                  >
-                    <option value="">Select agent</option>
-                    {agents.map((agent) => (
-                      <option key={agent.id} value={agent.id}>{agent.name}</option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-5 py-4">
-                  <select
-                    className="border border-gray-200 rounded-md px-2 py-1 text-xs"
-                    value=""
-                    onChange={(e) => handleStatusAction(item.id, e.target.value)}
-                    disabled={busyFilingId === item.id}
-                  >
-                    <option value="">Update status</option>
-                    <option value="APPROVED">APPROVE</option>
-                    <option value="REJECTED">REJECT</option>
-                  </select>
-                </td>
-                <td className="px-5 py-4 text-xs text-gray-500">{formatDate(item.submittedAt)}</td>
-              </tr>
-            ))}
+              {!loading && patentFilings.length === 0 && (
+                <tr><td colSpan={7} className="px-5 py-10 text-center text-sm text-gray-400">No recent patent filings.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-            {!loading && filings.length === 0 && (
-              <tr>
-                <td colSpan={8} className="px-5 py-10 text-center text-sm text-gray-400">
-                  No filings found for selected filters.
-                </td>
+      {/* ── Recent Non-Patent Filings ── */}
+      <div>
+        <h2 className="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-3">Recent Non-Patent Filings</h2>
+        <div className="bg-white rounded-xl border border-gray-100 overflow-x-auto">
+          <table className="w-full text-sm min-w-[1000px]">
+            <thead>
+              <tr className="border-b border-gray-100">
+                {["Reference", "Type", "Status", "Agent", "Assign Agent", "Update Status", "Submitted"].map((h) => (
+                  <th key={h} className="text-left text-[10px] font-semibold tracking-widest text-gray-400 uppercase px-5 py-3">{h}</th>
+                ))}
               </tr>
-            )}
-
-            {loading && (
-              <tr>
-                <td colSpan={8} className="px-5 py-10 text-center text-sm text-gray-400">
-                  Loading admin data...
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {loading && (
+                <tr><td colSpan={7} className="px-5 py-10 text-center text-sm text-gray-400">Loading...</td></tr>
+              )}
+              {!loading && nonPatentFilings.map((item) => (
+                <tr key={item.id} className="border-b border-gray-50">
+                  <td className="px-5 py-4 text-xs font-semibold text-[#10243a]">{item.referenceNumber || item.id || "-"}</td>
+                  <td className="px-5 py-4 text-xs text-gray-600">{item.type || "-"}</td>
+                  <td className="px-5 py-4 text-xs text-gray-700">{item.status || "-"}</td>
+                  <td className="px-5 py-4 text-xs text-gray-600">{item.assignedAgentName || item.assignedAgentId || "Unassigned"}</td>
+                  <td className="px-5 py-4">
+                    <select
+                      className="border border-gray-200 rounded-md px-2 py-1 text-xs"
+                      defaultValue=""
+                      onChange={(e) => handleNonPatentAssign(item.id, e.target.value)}
+                      disabled={busyId === item.id}
+                    >
+                      <option value="">Select agent</option>
+                      {agents.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-5 py-4">
+                    <select
+                      className="border border-gray-200 rounded-md px-2 py-1 text-xs"
+                      defaultValue=""
+                      onChange={(e) => handleNonPatentStatus(item.id, e.target.value)}
+                      disabled={busyId === item.id || item.status === "DRAFT"}
+                    >
+                      <option value="">Update status</option>
+                      {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </td>
+                  <td className="px-5 py-4 text-xs text-gray-500">{formatDate(item.submittedAt)}</td>
+                </tr>
+              ))}
+              {!loading && nonPatentFilings.length === 0 && (
+                <tr><td colSpan={7} className="px-5 py-10 text-center text-sm text-gray-400">No recent non-patent filings.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
