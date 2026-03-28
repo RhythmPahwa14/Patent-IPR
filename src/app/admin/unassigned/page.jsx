@@ -9,6 +9,20 @@ import {
 
 const NON_PATENT_TYPES = ["TRADEMARK", "COPYRIGHT", "DESIGN"];
 
+function StatusBadge({ status }) {
+  if (!status) return <span className="text-gray-400">-</span>;
+  const s = String(status).toUpperCase();
+  let colorClass = "bg-gray-100 text-gray-700";
+  
+  if (s === "PENDING") colorClass = "bg-orange-100 text-orange-800";
+  else if (s === "IN_REVIEW") colorClass = "bg-blue-100 text-blue-800";
+  else if (s === "APPROVED") colorClass = "bg-green-100 text-green-800";
+  else if (s === "REJECTED") colorClass = "bg-red-100 text-red-800";
+  else if (s === "DRAFT") colorClass = "bg-slate-100 text-slate-700";
+
+  return <span className={`px-2.5 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase ${colorClass}`}>{s}</span>;
+}
+
 export default function AdminUnassignedPage() {
   const [items, setItems] = useState([]);
   const [agents, setAgents] = useState([]);
@@ -102,7 +116,7 @@ export default function AdminUnassignedPage() {
               <tr key={item.id} className="border-b border-gray-50">
                 <td className="px-5 py-4 text-xs font-semibold text-[#10243a]">{item.referenceNumber || item.id || "-"}</td>
                 <td className="px-5 py-4 text-sm font-semibold text-[#10243a]">{item.title || item.type || "Untitled"}</td>
-                <td className="px-5 py-4 text-xs text-gray-700">{item.status || "-"}</td>
+                <td className="px-5 py-4"><StatusBadge status={item.status} /></td>
                 <td className="px-5 py-4 text-xs text-gray-600 capitalize">{item.filingCategory || "patent"}</td>
                 <td className="px-5 py-4 text-xs text-gray-500">
                   {item.submittedAt ? new Date(item.submittedAt).toLocaleDateString() : "-"}
