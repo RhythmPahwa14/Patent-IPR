@@ -13,7 +13,7 @@ export default function AdminAgentsPage() {
 
     const result = await getAdminAgents();
     if (!result.ok) {
-      setError(result.data?.message || "Unable to load agents.");
+      setError(result.data?.message || "Unable to load agent workload.");
       setAgents([]);
       setLoading(false);
       return;
@@ -30,8 +30,8 @@ export default function AdminAgentsPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#10243a]">Agents</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Assignable agents and their active assignment load.</p>
+        <h1 className="text-2xl font-bold text-[#10243a]">Agent Workload</h1>
+        <p className="text-sm text-gray-500 mt-0.5">All agents with their current patent and non-patent filing counts.</p>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-100 p-4">
@@ -43,25 +43,31 @@ export default function AdminAgentsPage() {
       {error && <p className="text-sm text-red-500">{error}</p>}
 
       <div className="bg-white rounded-xl border border-gray-100 overflow-x-auto">
-        <table className="w-full text-sm min-w-[760px]">
+        <table className="w-full text-sm min-w-[860px]">
           <thead>
             <tr className="border-b border-gray-100">
-              {["Agent ID", "Name", "Email", "Active Assignments"].map((head) => (
+              {["Agent ID", "Name", "Email", "Patent Filings", "Non-Patent Filings", "Total Filings"].map((head) => (
                 <th key={head} className="text-left text-[10px] font-semibold tracking-widest text-gray-400 uppercase px-5 py-3">{head}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {loading && <tr><td colSpan={4} className="px-5 py-10 text-center text-sm text-gray-400">Loading agents...</td></tr>}
+            {loading && (
+              <tr><td colSpan={6} className="px-5 py-10 text-center text-sm text-gray-400">Loading agent workload...</td></tr>
+            )}
             {!loading && agents.map((agent) => (
               <tr key={agent.id} className="border-b border-gray-50">
                 <td className="px-5 py-4 text-xs font-semibold text-[#10243a]">{agent.id || "-"}</td>
                 <td className="px-5 py-4 text-sm font-semibold text-[#10243a]">{agent.name || "-"}</td>
                 <td className="px-5 py-4 text-xs text-gray-600">{agent.email || "-"}</td>
-                <td className="px-5 py-4 text-xs text-gray-700">{agent.activeAssignments ?? 0}</td>
+                <td className="px-5 py-4 text-xs text-gray-700">{agent.patentFilingsCount ?? 0}</td>
+                <td className="px-5 py-4 text-xs text-gray-700">{agent.nonPatentFilingsCount ?? 0}</td>
+                <td className="px-5 py-4 text-xs font-semibold text-[#10243a]">{agent.totalFilings ?? 0}</td>
               </tr>
             ))}
-            {!loading && agents.length === 0 && <tr><td colSpan={4} className="px-5 py-10 text-center text-sm text-gray-400">No agents found.</td></tr>}
+            {!loading && agents.length === 0 && (
+              <tr><td colSpan={6} className="px-5 py-10 text-center text-sm text-gray-400">No agents found.</td></tr>
+            )}
           </tbody>
         </table>
       </div>

@@ -212,6 +212,10 @@ function normalizeAdminFiling(item = {}) {
     assignedAgentName: item.assignedAgentName || item.agentName || "",
     submittedAt: item.submittedAt || item.createdAt || null,
     updatedAt: item.updatedAt || item.createdAt || null,
+    estimation: item.estimation ?? null,
+    client: item.client || null,
+    agent: item.agent || null,
+    adminNote: item.adminNote || "",
     raw: item,
   };
 }
@@ -244,387 +248,6 @@ function extractAdminPageable(data, fallbackPage, fallbackSize, fallbackTotal = 
   };
 }
 
-const adminRateLimitCooldowns = new Map();
-const ADMIN_RATE_LIMIT_COOLDOWN_MS = 3000;
-
-async function fetchAdminFilingList(path, { page = 0, size = 10, status, type, unassigned } = {}) {
-  const lastLimitedAt = adminRateLimitCooldowns.get(path);
-  if (lastLimitedAt && Date.now() - lastLimitedAt < ADMIN_RATE_LIMIT_COOLDOWN_MS) {
-    return {
-      ok: false,
-      items: [],
-      pagination: {
-        page,
-        size,
-        totalElements: 0,
-        totalPages: 0,
-      },
-      status: 429,
-      data: { message: "Too many requests, please try again later." },
-    };
-  }
-
-  const isInvalidParamError = (result) => {
-    const message = String(result?.data?.message || "").toLowerCase();
-    return !result?.ok && result?.status === 400 && message.includes("invalid request parameter format");
-  };
-
-  const isValidationError = (result) => {
-    const message = String(result?.data?.message || "").toLowerCase();
-    const code = String(result?.data?.code || "").toLowerCase();
-    const statusCode = Number(result?.status || 0);
-
-    return (
-      !result?.ok &&
-      (statusCode === 422 || statusCode === 400) &&
-      (message.includes("validation failed") || code.includes("validation_error"))
-    );
-  };
-
-  const isDashboardPath = path === "/api/admin/dashboard";
-
-  const buildListPath = (typeValue) => {
-    const params = new URLSearchParams();
-
-    // Keep request parameters conservative to avoid backend parser mismatches.
-    if (Number.isFinite(page) && page > 0) params.set("page", String(page));
-    if (Number.isFinite(size) && size > 0 && size !== 10) params.set("size", String(size));
-    if (status) params.set("status", status);
-    if (typeValue) params.set("type", typeValue);
-    if (unassigned === true) params.set("unassigned", "true");
-
-    return params.toString() ? `${path}?${params.toString()}` : path;
-  };
-
-  const typeVariants = (value) => {
-    if (!value) return [];
-
-    const normalized = String(value).trim().toLowerCase();
-    if (normalized === "nonpatent") {
-      return ["nonPatent", "NON_PATENT", "non-patent", "nonpatent"];
-    }
-
-    return ["patent", "PATENT"];
-  };
-
-  const fetchForTypeVariants = async (value) => {
-    const variants = typeVariants(value);
-    for (const candidate of variants) {
-      const result = await apiRequest(buildListPath(candidate), { method: "GET" });
-      if (result?.status === 429) {
-        adminRateLimitCooldowns.set(path, Date.now());
-        return result;
-      }
-      if (result.ok || !isInvalidParamError(result)) {
-        return result;
-      }
-    }
-
-    return {
-      ok: false,
-      status: 400,
-      data: { message: "Invalid request parameter format" },
-    };
-  };
-
-  let response = await apiRequest(buildListPath(type), { method: "GET" });
-
-  if (response?.status === 429) {
-    adminRateLimitCooldowns.set(path, Date.now());
-  }
-
-  if (isValidationError(response)) {
-    // Validation fallback for inconsistent backend validators:
-    // try plain path first, then explicit default pageable query.
-    response = await apiRequest(path, { method: "GET" });
-    if (response?.status === 429) {
-      adminRateLimitCooldowns.set(path, Date.now());
-    }
-
-    if (!response.ok && isValidationError(response) && isDashboardPath) {
-      const fallbackParams = new URLSearchParams({
-        page: String(Math.max(0, Number(page) || 0)),
-        size: String(Number(size) > 0 ? Number(size) : 10),
-      });
-      response = await apiRequest(`${path}?${fallbackParams.toString()}`, { method: "GET" });
-      if (response?.status === 429) {
-        adminRateLimitCooldowns.set(path, Date.now());
-      }
-    }
-  }
-
-  if (response?.status === 429) {
-    return {
-      ok: false,
-      items: [],
-      pagination: {
-        page,
-        size,
-        totalElements: 0,
-        totalPages: 0,
-      },
-      status: response.status,
-      data: response.data || { message: "Too many requests, please try again later." },
-    };
-  }
-
-  if (isInvalidParamError(response)) {
-    // Some backend builds reject list queries unless type enum matches an internal format.
-    if (type) {
-      response = await fetchForTypeVariants(type);
-    } else {
-      response = await apiRequest(path, { method: "GET" });
-      if (response?.status === 429) {
-        adminRateLimitCooldowns.set(path, Date.now());
-      }
-    }
-  }
-
-  if (!response.ok) {
-    return {
-      ok: false,
-      items: [],
-      pagination: {
-        page,
-        size,
-        totalElements: 0,
-        totalPages: 0,
-      },
-      status: response.status,
-      data: response.data,
-    };
-  }
-
-  const list = extractAdminArray(response.data).map(normalizeAdminFiling);
-
-  return {
-    ok: true,
-    items: list,
-    pagination: extractAdminPageable(response.data, page, size, list.length),
-    status: response.status,
-    data: response.data,
-  };
-}
-
-export async function getAdminDashboard({ page = 0, size = 10, status, type, unassigned = false } = {}) {
-  const result = await fetchAdminFilingList("/api/admin/dashboard", {
-    page,
-    size,
-    status,
-    type,
-    unassigned,
-  });
-
-  if (!result.ok) {
-    return {
-      ...result,
-      stats: {
-        totalFilings: 0,
-        unassigned: 0,
-        inProgress: 0,
-        decided: 0,
-      },
-    };
-  }
-
-  const stats = result.data?.data?.stats || {
-    totalFilings: result.pagination.totalElements,
-    unassigned: result.items.filter((item) => !item.assignedAgentId).length,
-    inProgress: result.items.filter((item) => item.status === "PENDING").length,
-    decided: result.items.filter((item) => ["APPROVED", "REJECTED"].includes(item.status)).length,
-  };
-
-  return {
-    ...result,
-    stats,
-  };
-}
-
-export async function getAdminFilings({ page = 0, size = 10, status, type, unassigned = false } = {}) {
-  return fetchAdminFilingList("/api/admin/filings", {
-    page,
-    size,
-    status,
-    type,
-    unassigned,
-  });
-}
-
-export async function getAdminUnassignedFilings({ page = 0, size = 10, type } = {}) {
-  return fetchAdminFilingList("/api/admin/unassigned", {
-    page,
-    size,
-    type,
-  });
-}
-
-export async function getAdminAssignments({ page = 0, size = 10, type } = {}) {
-  return fetchAdminFilingList("/api/admin/assignments", {
-    page,
-    size,
-    type,
-  });
-}
-
-export async function getAdminDecisions({ page = 0, size = 10, status, type } = {}) {
-  return fetchAdminFilingList("/api/admin/decisions", {
-    page,
-    size,
-    status,
-    type,
-  });
-}
-
-export async function getAdminAgents() {
-  const response = await apiRequest("/api/admin/agents", { method: "GET" });
-  if (!response.ok) {
-    return {
-      ok: false,
-      items: [],
-      status: response.status,
-      data: response.data,
-    };
-  }
-
-  const candidates = [response.data?.data, response.data?.agents, response.data];
-  const list = candidates.find((entry) => Array.isArray(entry)) || [];
-
-  const items = list.map((agent = {}) => ({
-    id: agent.id || agent.agentId || "",
-    name: agent.name || agent.fullName || agent.email || "Agent",
-    email: agent.email || "",
-    activeAssignments: agent.activeAssignments || agent.assignedCount || 0,
-    raw: agent,
-  }));
-
-  return {
-    ok: true,
-    items,
-    status: response.status,
-    data: response.data,
-  };
-}
-
-export async function getAdminClients() {
-  const response = await apiRequest("/api/admin/clients", { method: "GET" });
-  if (!response.ok) {
-    return {
-      ok: false,
-      items: [],
-      status: response.status,
-      data: response.data,
-    };
-  }
-
-  const candidates = [response.data?.data, response.data?.clients, response.data];
-  const list = candidates.find((entry) => Array.isArray(entry)) || [];
-
-  const items = list.map((client = {}) => ({
-    id: client.id || client.clientId || "",
-    name: client.name || client.fullName || client.email || "Client",
-    email: client.email || "",
-    role: client.role || "client",
-    createdAt: client.createdAt || null,
-    raw: client,
-  }));
-
-  return {
-    ok: true,
-    items,
-    status: response.status,
-    data: response.data,
-  };
-}
-
-export async function getAdminProfile() {
-  const response = await apiRequest("/api/admin/profile", { method: "GET" });
-  if (!response.ok) {
-    return {
-      ok: false,
-      profile: null,
-      status: response.status,
-      data: response.data,
-    };
-  }
-
-  const profile = response.data?.data || response.data || null;
-
-  return {
-    ok: true,
-    profile,
-    status: response.status,
-    data: response.data,
-  };
-}
-
-export async function assignAdminFiling(filingId = "", agentId = "") {
-  const id = String(filingId || "").trim();
-  const nextAgentId = String(agentId || "").trim();
-  if (!id || !nextAgentId) {
-    return {
-      ok: false,
-      status: 400,
-      data: { message: "Filing ID and agent ID are required." },
-    };
-  }
-
-  const response = await apiRequest(`/api/admin/filings/${encodeURIComponent(id)}/assign`, {
-    method: "PATCH",
-    body: { agentId: nextAgentId },
-  });
-
-  return {
-    ok: response.ok,
-    status: response.status,
-    data: response.data,
-  };
-}
-
-export async function reassignAdminFiling(filingId = "", agentId = "") {
-  const id = String(filingId || "").trim();
-  const nextAgentId = String(agentId || "").trim();
-  if (!id || !nextAgentId) {
-    return {
-      ok: false,
-      status: 400,
-      data: { message: "Filing ID and agent ID are required." },
-    };
-  }
-
-  const response = await apiRequest(`/api/admin/filings/${encodeURIComponent(id)}/reassign`, {
-    method: "PATCH",
-    body: { agentId: nextAgentId },
-  });
-
-  return {
-    ok: response.ok,
-    status: response.status,
-    data: response.data,
-  };
-}
-
-export async function updateAdminFilingStatus(filingId = "", status = "") {
-  const id = String(filingId || "").trim();
-  const nextStatus = String(status || "").trim().toUpperCase();
-  if (!id || !nextStatus) {
-    return {
-      ok: false,
-      status: 400,
-      data: { message: "Filing ID and status are required." },
-    };
-  }
-
-  const response = await apiRequest(`/api/admin/filings/${encodeURIComponent(id)}/status`, {
-    method: "PATCH",
-    body: { status: nextStatus },
-  });
-
-  return {
-    ok: response.ok,
-    status: response.status,
-    data: response.data,
-  };
-}
 
 export async function updateAgentPatentStatus(patentId = "", status = "") {
   const id = String(patentId || "").trim();
@@ -1062,4 +685,324 @@ export async function getFilingByReference(referenceNumber = "") {
     data: patent.data,
     status: patent.status || 404,
   };
+}
+
+// ─── Admin Dashboard ───────────────────────────────────────────────────────
+// GET /api/admin/dashboard
+export async function getAdminDashboard() {
+  const response = await apiRequest("/api/admin/dashboard", { method: "GET" });
+
+  if (!response.ok) {
+    return {
+      ok: false,
+      stats: {
+        users: { total: 0, clients: 0, agents: 0 },
+        patentFilings: { total: 0, byStatus: {} },
+        nonPatentFilings: { total: 0, byStatus: {} },
+        recentActivity: {},
+      },
+      status: response.status,
+      data: response.data,
+    };
+  }
+
+  const raw = response.data?.data || response.data || {};
+  return {
+    ok: true,
+    stats: {
+      users: raw.users || { total: 0, clients: 0, agents: 0 },
+      patentFilings: raw.patentFilings || { total: 0, byStatus: {} },
+      nonPatentFilings: raw.nonPatentFilings || { total: 0, byStatus: {} },
+      recentActivity: raw.recentActivity || {},
+    },
+    status: response.status,
+    data: response.data,
+  };
+}
+
+// ─── Admin Users ────────────────────────────────────────────────────────────
+function _normalizeUser(item = {}) {
+  return {
+    id: item.id || "",
+    name: item.name || item.fullName || item.email || "",
+    email: item.email || "",
+    role: item.role || "client",
+    createdAt: item.createdAt || null,
+    raw: item,
+  };
+}
+
+function _extractUserArray(data) {
+  const candidates = [data?.data?.content, data?.data?.users, data?.data, data?.content, data];
+  for (const c of candidates) {
+    if (Array.isArray(c)) return c;
+  }
+  return [];
+}
+
+function _extractUserPageable(data, fallbackPage, fallbackSize, fallbackTotal = 0) {
+  const pageable = data?.data?.pageable || data?.pageable;
+  return {
+    page: pageable?.page ?? fallbackPage,
+    size: pageable?.size ?? fallbackSize,
+    totalElements: pageable?.totalElements ?? fallbackTotal,
+    totalPages: pageable?.totalPages ?? (fallbackTotal > 0 ? 1 : 0),
+  };
+}
+
+// GET /api/admin/users
+export async function getAdminUsers({ role, search, page = 0, size = 20, sort = "createdAt,desc" } = {}) {
+  const params = new URLSearchParams({ page: String(page), size: String(size), sort });
+  if (role) params.set("role", role);
+  if (search) params.set("search", search);
+
+  const response = await apiRequest(`/api/admin/users?${params.toString()}`, { method: "GET" });
+  if (!response.ok) {
+    return { ok: false, items: [], pagination: { page, size, totalElements: 0, totalPages: 0 }, status: response.status, data: response.data };
+  }
+
+  const list = _extractUserArray(response.data).map(_normalizeUser);
+  return { ok: true, items: list, pagination: _extractUserPageable(response.data, page, size, list.length), status: response.status, data: response.data };
+}
+
+export async function getAdminClients({ page = 0, size = 20, search } = {}) {
+  return getAdminUsers({ role: "client", page, size, search });
+}
+
+export async function getAdminAgentUsers({ page = 0, size = 20, search } = {}) {
+  return getAdminUsers({ role: "agent", page, size, search });
+}
+
+// GET /api/admin/users/{id}
+export async function getAdminUserById(userId = "") {
+  const id = String(userId || "").trim();
+  if (!id) return { ok: false, status: 400, data: { message: "User ID required." } };
+  const response = await apiRequest(`/api/admin/users/${encodeURIComponent(id)}`, { method: "GET" });
+  return { ok: response.ok, user: response.ok ? _normalizeUser(response.data?.data || response.data || {}) : null, status: response.status, data: response.data };
+}
+
+// POST /api/admin/users
+export async function createAdminUser({ name, email, password, role } = {}) {
+  if (!name || !email || !password || !role) {
+    return { ok: false, status: 400, data: { message: "name, email, password, and role are required." } };
+  }
+  const response = await apiRequest("/api/admin/users", { method: "POST", body: { name, email, password, role } });
+  return { ok: response.ok, status: response.status, data: response.data };
+}
+
+// PATCH /api/admin/users/{id}/role
+export async function updateAdminUserRole(userId = "", role = "") {
+  const id = String(userId || "").trim();
+  if (!id || !role) return { ok: false, status: 400, data: { message: "User ID and role are required." } };
+  const response = await apiRequest(`/api/admin/users/${encodeURIComponent(id)}/role`, { method: "PATCH", body: { role } });
+  return { ok: response.ok, status: response.status, data: response.data };
+}
+
+// DELETE /api/admin/users/{id}
+export async function deleteAdminUser(userId = "") {
+  const id = String(userId || "").trim();
+  if (!id) return { ok: false, status: 400, data: { message: "User ID required." } };
+  const response = await apiRequest(`/api/admin/users/${encodeURIComponent(id)}`, { method: "DELETE" });
+  return { ok: response.ok, status: response.status, data: response.data };
+}
+
+// ─── Agent Workload ─────────────────────────────────────────────────────────
+// GET /api/admin/agents/workload
+export async function getAdminAgents() {
+  const response = await apiRequest("/api/admin/agents/workload", { method: "GET" });
+  if (!response.ok) {
+    return { ok: false, items: [], status: response.status, data: response.data };
+  }
+
+  const candidates = [response.data?.data, response.data?.agents, response.data];
+  const list = candidates.find((entry) => Array.isArray(entry)) || [];
+
+  const items = list.map((agent = {}) => ({
+    id: agent.id || agent.agentId || "",
+    name: agent.name || agent.fullName || agent.email || "Agent",
+    email: agent.email || "",
+    patentFilingsCount: agent.patent_filings_count ?? agent.patentFilingsCount ?? 0,
+    nonPatentFilingsCount: agent.non_patent_filings_count ?? agent.nonPatentFilingsCount ?? 0,
+    totalFilings: agent.total_filings ?? agent.totalFilings ?? 0,
+    activeAssignments: agent.total_filings ?? agent.totalFilings ?? agent.activeAssignments ?? 0,
+    raw: agent,
+  }));
+
+  return { ok: true, items, status: response.status, data: response.data };
+}
+
+// ─── Admin Patent Filings ───────────────────────────────────────────────────
+// GET /api/admin/patent-filings
+export async function getAdminPatentFilings({ status, userId, search, page = 0, size = 20, sort = "submittedAt,desc" } = {}) {
+  const params = new URLSearchParams({ page: String(page), size: String(size), sort });
+  if (status) params.set("status", status);
+  if (userId) params.set("userId", userId);
+  if (search) params.set("search", search);
+
+  const response = await apiRequest(`/api/admin/patent-filings?${params.toString()}`, { method: "GET" });
+  if (!response.ok) {
+    return { ok: false, items: [], pagination: { page, size, totalElements: 0, totalPages: 0 }, status: response.status, data: response.data };
+  }
+
+  const list = extractAdminArray(response.data).map(normalizeAdminFiling);
+  return { ok: true, items: list, pagination: extractAdminPageable(response.data, page, size, list.length), status: response.status, data: response.data };
+}
+
+// GET /api/admin/patent-filings/{id}
+export async function getAdminPatentFilingById(id = "") {
+  const filingId = String(id || "").trim();
+  if (!filingId) return { ok: false, status: 400, data: { message: "Filing ID required." } };
+  const response = await apiRequest(`/api/admin/patent-filings/${encodeURIComponent(filingId)}`, { method: "GET" });
+  return { ok: response.ok, filing: response.ok ? normalizeAdminFiling(response.data?.data || response.data || {}) : null, status: response.status, data: response.data };
+}
+
+// PATCH /api/admin/patent-filings/{id}/status
+export async function updateAdminPatentFilingStatus(filingId = "", status = "", adminNote = "") {
+  const id = String(filingId || "").trim();
+  const nextStatus = String(status || "").trim().toUpperCase();
+  if (!id || !nextStatus) return { ok: false, status: 400, data: { message: "Filing ID and status are required." } };
+  const body = { status: nextStatus };
+  if (adminNote) body.adminNote = adminNote;
+  const response = await apiRequest(`/api/admin/patent-filings/${encodeURIComponent(id)}/status`, { method: "PATCH", body });
+  return { ok: response.ok, status: response.status, data: response.data };
+}
+
+// PATCH /api/admin/patent-filings/{id}/assign-agent
+export async function assignAdminPatentFiling(filingId = "", agentId = "") {
+  const id = String(filingId || "").trim();
+  const nextAgentId = String(agentId || "").trim();
+  if (!id || !nextAgentId) return { ok: false, status: 400, data: { message: "Filing ID and agent ID are required." } };
+  const response = await apiRequest(`/api/admin/patent-filings/${encodeURIComponent(id)}/assign-agent`, { method: "PATCH", body: { agentId: nextAgentId } });
+  return { ok: response.ok, status: response.status, data: response.data };
+}
+
+// PATCH /api/admin/patent-filings/{id}/estimation
+export async function setAdminPatentFilingEstimation(filingId = "", estimation = 0) {
+  const id = String(filingId || "").trim();
+  if (!id) return { ok: false, status: 400, data: { message: "Filing ID required." } };
+  const response = await apiRequest(`/api/admin/patent-filings/${encodeURIComponent(id)}/estimation`, { method: "PATCH", body: { estimation: Number(estimation) } });
+  return { ok: response.ok, status: response.status, data: response.data };
+}
+
+// ─── Admin Non-Patent Filings ───────────────────────────────────────────────
+// GET /api/admin/non-patent-filings
+export async function getAdminNonPatentFilings({ status, filingType, userId, search, page = 0, size = 20, sort = "submittedAt,desc" } = {}) {
+  const params = new URLSearchParams({ page: String(page), size: String(size), sort });
+  if (status) params.set("status", status);
+  if (filingType) params.set("filingType", filingType);
+  if (userId) params.set("userId", userId);
+  if (search) params.set("search", search);
+
+  const response = await apiRequest(`/api/admin/non-patent-filings?${params.toString()}`, { method: "GET" });
+  if (!response.ok) {
+    return { ok: false, items: [], pagination: { page, size, totalElements: 0, totalPages: 0 }, status: response.status, data: response.data };
+  }
+
+  const list = extractAdminArray(response.data).map(normalizeAdminFiling);
+  return { ok: true, items: list, pagination: extractAdminPageable(response.data, page, size, list.length), status: response.status, data: response.data };
+}
+
+// GET /api/admin/non-patent-filings/{id}
+export async function getAdminNonPatentFilingById(id = "") {
+  const filingId = String(id || "").trim();
+  if (!filingId) return { ok: false, status: 400, data: { message: "Filing ID required." } };
+  const response = await apiRequest(`/api/admin/non-patent-filings/${encodeURIComponent(filingId)}`, { method: "GET" });
+  return { ok: response.ok, filing: response.ok ? normalizeAdminFiling(response.data?.data || response.data || {}) : null, status: response.status, data: response.data };
+}
+
+// PATCH /api/admin/non-patent-filings/{id}/status
+export async function updateAdminNonPatentFilingStatus(filingId = "", status = "", adminNote = "") {
+  const id = String(filingId || "").trim();
+  const nextStatus = String(status || "").trim().toUpperCase();
+  if (!id || !nextStatus) return { ok: false, status: 400, data: { message: "Filing ID and status are required." } };
+  const body = { status: nextStatus };
+  if (adminNote) body.adminNote = adminNote;
+  const response = await apiRequest(`/api/admin/non-patent-filings/${encodeURIComponent(id)}/status`, { method: "PATCH", body });
+  return { ok: response.ok, status: response.status, data: response.data };
+}
+
+// PATCH /api/admin/non-patent-filings/{id}/assign-agent
+export async function assignAdminNonPatentFiling(filingId = "", agentId = "") {
+  const id = String(filingId || "").trim();
+  const nextAgentId = String(agentId || "").trim();
+  if (!id || !nextAgentId) return { ok: false, status: 400, data: { message: "Filing ID and agent ID are required." } };
+  const response = await apiRequest(`/api/admin/non-patent-filings/${encodeURIComponent(id)}/assign-agent`, { method: "PATCH", body: { agentId: nextAgentId } });
+  return { ok: response.ok, status: response.status, data: response.data };
+}
+
+// ─── Combined view helpers ───────────────────────────────────────────────────
+export async function getAdminFilings({ status, filingType, page = 0, size = 20, sort = "submittedAt,desc" } = {}) {
+  const NPF_TYPES = ["TRADEMARK", "COPYRIGHT", "DESIGN"];
+  if (filingType && NPF_TYPES.includes(String(filingType).toUpperCase())) {
+    return getAdminNonPatentFilings({ status, filingType, page, size, sort });
+  }
+  if (filingType && String(filingType).toLowerCase() === "patent") {
+    return getAdminPatentFilings({ status, page, size, sort });
+  }
+
+  const [patentRes, nonPatentRes] = await Promise.all([
+    getAdminPatentFilings({ status, page: 0, size: 100, sort }),
+    getAdminNonPatentFilings({ status, page: 0, size: 100, sort }),
+  ]);
+
+  const all = [
+    ...(patentRes.items || []).map((i) => ({ ...i, filingCategory: "patent" })),
+    ...(nonPatentRes.items || []).map((i) => ({ ...i, filingCategory: "non-patent" })),
+  ];
+  const totalElements = all.length;
+  const totalPages = Math.ceil(totalElements / size) || 0;
+  return {
+    ok: patentRes.ok || nonPatentRes.ok,
+    items: all.slice(page * size, page * size + size),
+    pagination: { page, size, totalElements, totalPages },
+    status: 200,
+    data: null,
+  };
+}
+
+export async function getAdminUnassignedFilings({ filingType, page = 0, size = 20 } = {}) {
+  const res = await getAdminFilings({ filingType, page: 0, size: 200 });
+  if (!res.ok) return res;
+  const unassigned = res.items.filter((i) => !i.assignedAgentId);
+  const totalElements = unassigned.length;
+  return { ok: true, items: unassigned.slice(page * size, page * size + size), pagination: { page, size, totalElements, totalPages: Math.ceil(totalElements / size) || 0 }, status: 200, data: null };
+}
+
+export async function getAdminAssignments({ filingType, page = 0, size = 20 } = {}) {
+  const res = await getAdminFilings({ filingType, page: 0, size: 200 });
+  if (!res.ok) return res;
+  const assigned = res.items.filter((i) => !!i.assignedAgentId);
+  const totalElements = assigned.length;
+  return { ok: true, items: assigned.slice(page * size, page * size + size), pagination: { page, size, totalElements, totalPages: Math.ceil(totalElements / size) || 0 }, status: 200, data: null };
+}
+
+export async function getAdminDecisions({ status, filingType, page = 0, size = 20 } = {}) {
+  const res = await getAdminFilings({ filingType, page: 0, size: 200 });
+  if (!res.ok) return res;
+  const DECIDED = ["APPROVED", "REJECTED"];
+  const decided = res.items.filter((i) => (status ? i.status === status : DECIDED.includes(i.status)));
+  const totalElements = decided.length;
+  return { ok: true, items: decided.slice(page * size, page * size + size), pagination: { page, size, totalElements, totalPages: Math.ceil(totalElements / size) || 0 }, status: 200, data: null };
+}
+
+// ─── Unified assign / status helpers ─────────────────────────────────────────
+export async function assignAdminFiling(filingId = "", agentId = "", filingCategory = "patent") {
+  if (filingCategory === "non-patent") return assignAdminNonPatentFiling(filingId, agentId);
+  return assignAdminPatentFiling(filingId, agentId);
+}
+
+export async function reassignAdminFiling(filingId = "", agentId = "", filingCategory = "patent") {
+  return assignAdminFiling(filingId, agentId, filingCategory);
+}
+
+export async function updateAdminFilingStatus(filingId = "", status = "", adminNote = "", filingCategory = "patent") {
+  if (filingCategory === "non-patent") return updateAdminNonPatentFilingStatus(filingId, status, adminNote);
+  return updateAdminPatentFilingStatus(filingId, status, adminNote);
+}
+
+// ─── Admin Profile (from localStorage) ────────────────────────────────────────
+export async function getAdminProfile() {
+  const stored = getStoredUser();
+  if (stored) return { ok: true, profile: stored, status: 200, data: stored };
+  return { ok: false, profile: null, status: 404, data: { message: "Profile not available." } };
 }

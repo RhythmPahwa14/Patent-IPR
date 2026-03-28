@@ -1,13 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
-import { assignAdminFiling, getAdminAgents, getAdminUnassignedFilings } from "@/lib/api";
+import {
+  getAdminUnassignedFilings,
+  getAdminAgents,
+  assignAdminPatentFiling,
+  assignAdminNonPatentFiling,
+} from "@/lib/api";
 
-const TYPE_OPTIONS = ["", "patent", "nonPatent"];
+const NON_PATENT_TYPES = ["TRADEMARK", "COPYRIGHT", "DESIGN"];
 
 export default function AdminUnassignedPage() {
   const [items, setItems] = useState([]);
   const [agents, setAgents] = useState([]);
-  const [type, setType] = useState("");
+  const [filingType, setFilingType] = useState("");
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState("");
   const [error, setError] = useState("");
@@ -17,7 +22,7 @@ export default function AdminUnassignedPage() {
     setError("");
 
     const [filingsRes, agentsRes] = await Promise.all([
-      getAdminUnassignedFilings({ page: 0, size: 10, type: type || undefined }),
+      getAdminUnassignedFilings({ filingType: filingType || undefined, page: 0, size: 50 }),
       getAdminAgents(),
     ]);
 
@@ -28,25 +33,23 @@ export default function AdminUnassignedPage() {
       setItems(filingsRes.items || []);
     }
 
-    if (!agentsRes.ok) {
-      setError((prev) => prev || agentsRes.data?.message || "Unable to load agents.");
-      setAgents([]);
-    } else {
-      setAgents(agentsRes.items || []);
-    }
-
+    setAgents(agentsRes.items || []);
     setLoading(false);
   };
 
   useEffect(() => {
     load();
-  }, [type]);
+  }, [filingType]);
 
-  const handleAssign = async (filingId, agentId) => {
+  const handleAssign = async (item, agentId) => {
     if (!agentId) return;
+    setBusyId(item.id);
 
-    setBusyId(filingId);
-    const result = await assignAdminFiling(filingId, agentId);
+    const isNonPatent = item.filingCategory === "non-patent" ||
+      NON_PATENT_TYPES.includes(String(item.type || "").toUpperCase());
+    const fn = isNonPatent ? assignAdminNonPatentFiling : assignAdminPatentFiling;
+
+    const result = await fn(item.id, agentId);
     if (!result.ok) {
       setError(result.data?.message || "Unable to assign filing.");
       setBusyId("");
@@ -65,10 +68,16 @@ export default function AdminUnassignedPage() {
       </div>
 
       <div className="bg-white rounded-xl border border-gray-100 p-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-        <select className="border border-gray-200 rounded-lg px-3 py-2 text-sm" value={type} onChange={(e) => setType(e.target.value)}>
-          {TYPE_OPTIONS.map((entry) => (
-            <option key={entry || "all"} value={entry}>{entry || "All types"}</option>
-          ))}
+        <select
+          className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
+          value={filingType}
+          onChange={(e) => setFilingType(e.target.value)}
+        >
+          <option value="">All categories</option>
+          <option value="patent">Patent</option>
+          <option value="TRADEMARK">Trademark</option>
+          <option value="COPYRIGHT">Copyright</option>
+          <option value="DESIGN">Design</option>
         </select>
 
         <button onClick={load} className="bg-[#10243a] text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-[#1a3655] transition-colors">
@@ -82,24 +91,27 @@ export default function AdminUnassignedPage() {
         <table className="w-full text-sm min-w-[860px]">
           <thead>
             <tr className="border-b border-gray-100">
-              {["Reference", "Title", "Type", "Applicant", "Assign Agent"].map((head) => (
+              {["Reference", "Title / Type", "Status", "Category", "Submitted", "Assign Agent"].map((head) => (
                 <th key={head} className="text-left text-[10px] font-semibold tracking-widest text-gray-400 uppercase px-5 py-3">{head}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {loading && <tr><td colSpan={5} className="px-5 py-10 text-center text-sm text-gray-400">Loading unassigned filings...</td></tr>}
+            {loading && <tr><td colSpan={6} className="px-5 py-10 text-center text-sm text-gray-400">Loading unassigned filings...</td></tr>}
             {!loading && items.map((item) => (
               <tr key={item.id} className="border-b border-gray-50">
                 <td className="px-5 py-4 text-xs font-semibold text-[#10243a]">{item.referenceNumber || item.id || "-"}</td>
-                <td className="px-5 py-4 text-sm font-semibold text-[#10243a]">{item.title || "Untitled"}</td>
-                <td className="px-5 py-4 text-xs text-gray-600">{item.type || "-"}</td>
-                <td className="px-5 py-4 text-xs text-gray-600">{item.applicantName || "-"}</td>
+                <td className="px-5 py-4 text-sm font-semibold text-[#10243a]">{item.title || item.type || "Untitled"}</td>
+                <td className="px-5 py-4 text-xs text-gray-700">{item.status || "-"}</td>
+                <td className="px-5 py-4 text-xs text-gray-600 capitalize">{item.filingCategory || "patent"}</td>
+                <td className="px-5 py-4 text-xs text-gray-500">
+                  {item.submittedAt ? new Date(item.submittedAt).toLocaleDateString() : "-"}
+                </td>
                 <td className="px-5 py-4">
                   <select
                     className="border border-gray-200 rounded-md px-2 py-1 text-xs"
                     defaultValue=""
-                    onChange={(e) => handleAssign(item.id, e.target.value)}
+                    onChange={(e) => handleAssign(item, e.target.value)}
                     disabled={busyId === item.id}
                   >
                     <option value="">Select agent</option>
@@ -110,7 +122,9 @@ export default function AdminUnassignedPage() {
                 </td>
               </tr>
             ))}
-            {!loading && items.length === 0 && <tr><td colSpan={5} className="px-5 py-10 text-center text-sm text-gray-400">No unassigned filings found.</td></tr>}
+            {!loading && items.length === 0 && (
+              <tr><td colSpan={6} className="px-5 py-10 text-center text-sm text-gray-400">No unassigned filings found.</td></tr>
+            )}
           </tbody>
         </table>
       </div>
