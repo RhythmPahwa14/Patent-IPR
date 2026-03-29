@@ -2,24 +2,24 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-900 py-6 border-t border-slate-800">
-      <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+    <footer className="bg-[#0a1926] py-16 md:py-24">
+      <div className="max-w-7xl mx-auto px-6 flex flex-col items-center text-center gap-12 h-full">
         {/* Logo */}
-        <span className="font-bold text-white text-lg tracking-tight flex items-center gap-2">
-          <img src="/logo.jpg" alt="PATENT-IPR Logo" className="w-6 h-6 object-contain rounded-sm" />
-          PATENT<span className="text-blue-500">-IPR</span>
+        <span className="font-medium text-white text-[24px] tracking-tight flex items-center justify-center gap-2">
+          PATENT-IPR
         </span>
 
         {/* Links */}
-        <div className="flex items-center gap-8 text-[11px] font-bold uppercase tracking-widest text-slate-400">
+        <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12 text-[12px] font-bold uppercase tracking-[0.15em] text-[#9ca3af]">
           <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
           <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>
           <Link href="#" className="hover:text-white transition-colors">Global Offices</Link>
+          <Link href="/login" className="hover:text-white transition-colors">Client Portal</Link>
         </div>
 
         {/* Copyright */}
-        <div className="text-[11px] font-medium text-slate-500">
-          © 2026 PATENT-IPR. All rights reserved.
+        <div className="text-[12px] font-medium text-[#6b7280] tracking-wider">
+          © {new Date().getFullYear()} PATENT-IPR. ALL RIGHTS RESERVED.
         </div>
       </div>
     </footer>
