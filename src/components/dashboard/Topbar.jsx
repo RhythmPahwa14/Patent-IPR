@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getStoredUser, getToken } from "@/lib/api";
@@ -7,6 +7,8 @@ import { getStoredUser, getToken } from "@/lib/api";
 export default function DashboardTopbar({ title, searchPlaceholder = "Search case numbers, titles, or inventors...", onMenuOpen }) {
   const router = useRouter();
   const [user, setUser] = useState({ name: "User", role: "Client" });
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
 
   useEffect(() => {
@@ -24,7 +26,20 @@ export default function DashboardTopbar({ title, searchPlaceholder = "Search cas
       });
     }
 
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    router.push("/login");
+  };
 
   return (
     <header className="h-14 bg-white border-b border-gray-100 flex items-center gap-3 px-4 shrink-0">
@@ -69,14 +84,37 @@ export default function DashboardTopbar({ title, searchPlaceholder = "Search cas
         </Link>
 
         {/* User avatar */}
-        <div className="flex items-center gap-2">
-          <div className="text-right hidden md:block">
-            <p className="text-xs font-semibold text-[#0d1b2a] leading-tight">{user.name}</p>
-            <p className="text-[10px] text-gray-400">{user.role}</p>
+        <div className="relative" ref={dropdownRef}>
+          <div 
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+          >
+            <div className="text-right hidden md:block">
+              <p className="text-xs font-semibold text-[#0d1b2a] leading-tight">{user.name}</p>
+              <p className="text-[10px] text-gray-400">{user.role}</p>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-[#0d1b2a] flex items-center justify-center text-white text-xs font-bold shrink-0">
+              {user.name?.charAt(0) ?? "U"}
+            </div>
           </div>
-          <div className="w-8 h-8 rounded-full bg-[#0d1b2a] flex items-center justify-center text-white text-xs font-bold shrink-0">
-            {user.name?.charAt(0) ?? "U"}
-          </div>
+          
+          {dropdownOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-50">
+              <Link
+                href="/dashboard/profile"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                onClick={() => setDropdownOpen(false)}
+              >
+                My Profile
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
+              >
+                Log Out
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

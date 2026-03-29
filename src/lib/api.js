@@ -253,7 +253,12 @@ export async function getAgentPatentFilings({ status, search, page = 0, size = 2
     return { ok: false, items: [], pagination: { page, size, totalElements: 0, totalPages: 0 }, status: response.status, data: response.data };
   }
 
-  const list = extractPatentArray(response.data).map(normalizePatent);
+  let list = extractPatentArray(response.data).map(normalizePatent);
+  list = list.filter(i => {
+    const ref = (i.referenceNumber || "").toUpperCase();
+    const type = (i.raw?.type || i.raw?.filingType || "").toUpperCase();
+    return !ref.includes("-TM-") && !ref.includes("-CR-") && !ref.includes("-DS-") && type !== "NON-PATENT";
+  });
   const payload = response.data?.data || {};
   return {
     ok: true,
@@ -355,8 +360,8 @@ function normalizeAdminFiling(item = {}) {
   return {
     id: item.id || item.filingId || item.patentId || item.patent_id || item.trademarkId || item.copyrightId || item.designId || item.referenceNumber || "",
     referenceNumber: item.referenceNumber || item.referenceNo || item.reference_number || "",
-    title: item.title || item.name || "",
-    type: item.type || item.filingType || "",
+    title: item.title || item.name || item.trademarkName || item.titleOfWork || item.articleName || "",
+    type: item.type || item.filingType || (item.trademarkId ? "TRADEMARK" : item.copyrightId ? "COPYRIGHT" : item.designId ? "DESIGN" : ""),
     status: item.status || "",
     applicantName: item.applicantName || "",
     assignedAgentId: item.assignedAgentId || item.assigned_agent_id || item.agentId || item.agent_id || item.assignedAgent?.id || item.agent?.id || item.assignedTo || item.assigned_to || null,
@@ -990,7 +995,12 @@ export async function getAdminPatentFilings({ status, userId, search, page = 0, 
     return { ok: false, items: [], pagination: { page, size, totalElements: 0, totalPages: 0 }, status: response.status, data: response.data };
   }
 
-  const list = extractAdminArray(response.data).map(normalizeAdminFiling);
+  let list = extractAdminArray(response.data).map(normalizeAdminFiling);
+  list = list.filter(i => {
+    const ref = (i.referenceNumber || "").toUpperCase();
+    const type = (i.type || "").toUpperCase();
+    return !ref.includes("-TM-") && !ref.includes("-CR-") && !ref.includes("-DS-") && type !== "NON-PATENT";
+  });
   return { ok: true, items: list, pagination: extractAdminPageable(response.data, page, size, list.length), status: response.status, data: response.data };
 }
 
