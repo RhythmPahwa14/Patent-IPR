@@ -18,7 +18,7 @@ export default function ProfilePage() {
   const handle = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const save = () => { setSaved(true); setTimeout(() => setSaved(false), 2500); };
 
-  const logout = () => { localStorage.removeItem("token"); localStorage.removeItem("user"); router.push("/login"); };
+  const logout = () => { localStorage.removeItem("token"); localStorage.removeItem("user"); router.push("/"); };
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">

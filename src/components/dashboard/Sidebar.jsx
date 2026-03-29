@@ -41,7 +41,7 @@ export default function Sidebar({ onClose }) {
   return (
     <aside className="w-52 h-screen bg-[#0d1b2a] flex flex-col shrink-0 overflow-y-auto">
       {/* Logo */}
-      <div className="px-4 py-5 border-b border-white/10 flex items-center justify-between">
+      <Link href="/" className="block px-4 py-5 border-b border-white/10 hover:bg-white/5 transition-colors">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/10 shrink-0">
             <Image
@@ -57,6 +57,8 @@ export default function Sidebar({ onClose }) {
             <p className="text-white/40 text-[9px] tracking-wider uppercase">Client Portal</p>
           </div>
         </div>
+      </Link>
+      <div className="px-4 py-5 border-b border-white/10 flex items-center justify-between hidden">
         {/* Close button — mobile only */}
         <button
           onClick={onClose}

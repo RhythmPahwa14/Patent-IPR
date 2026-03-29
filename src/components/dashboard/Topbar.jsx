@@ -38,7 +38,7 @@ export default function DashboardTopbar({ title, searchPlaceholder = "Search cas
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    router.push("/login");
+    router.push("/");
   };
 
   return (
