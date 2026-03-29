@@ -71,7 +71,7 @@ export default function AgentTopbar({ searchPlaceholder = "Search cases, applica
 
         <Link
           href="/agent/review"
-          className="hidden lg:flex items-center gap-1.5 bg-[#0d1b2a] text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-[#1a2f4a] transition-colors"
+          className="hidden lg:flex items-center gap-1.5 bg-[#1a3d54] text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-[#153144] transition-colors"
         >
           <span className="material-symbols-outlined text-sm">rule</span>
           REVIEW QUEUE

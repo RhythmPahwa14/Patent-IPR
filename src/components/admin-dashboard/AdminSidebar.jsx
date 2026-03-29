@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -36,11 +37,17 @@ export default function AdminSidebar({ onClose }) {
   };
 
   return (
-    <aside className="w-60 h-screen bg-[#10243a] flex flex-col shrink-0 overflow-y-auto">
+    <aside className="w-60 h-screen bg-[#0d1b2a] flex flex-col shrink-0 overflow-y-auto">
       <div className="px-4 py-5 border-b border-white/10 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#f6b73c] rounded-lg flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-[#10243a] text-base">admin_panel_settings</span>
+          <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/10 shrink-0">
+            <Image
+              src="/logobg.png"
+              alt="Patent-IPR logo"
+              width={32}
+              height={32}
+              className="w-full h-full object-cover"
+            />
           </div>
           <div className="leading-tight">
             <p className="text-white text-xs font-extrabold tracking-tight">PATENT-IPR</p>
@@ -76,7 +83,7 @@ export default function AdminSidebar({ onClose }) {
         <Link
           href="/admin/unassigned"
           onClick={onClose}
-          className="flex items-center justify-center gap-2 w-full bg-[#f6b73c] text-[#10243a] text-xs font-bold py-2.5 rounded-lg hover:bg-[#e3a72f] transition-colors"
+          className="flex items-center justify-center gap-2 w-full bg-[#f0f4f8] text-[#0d1b2a] text-xs font-bold py-2.5 rounded-lg hover:bg-[#dce6f2] transition-colors"
         >
           <span className="material-symbols-outlined text-base">bolt</span>
           Quick Assign

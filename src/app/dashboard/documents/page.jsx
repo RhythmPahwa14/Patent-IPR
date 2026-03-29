@@ -82,7 +82,7 @@ export default function DocumentsPage() {
           <h1 className="text-2xl font-bold text-[#0d1b2a]">Documents</h1>
           <p className="text-sm text-gray-500 mt-0.5">All files and documents across your portfolio cases.</p>
         </div>
-        <button disabled className="flex items-center gap-2 bg-[#0d1b2a] text-white text-sm font-semibold px-4 py-2.5 rounded-lg opacity-60 cursor-not-allowed">
+        <button disabled className="flex items-center gap-2 bg-[#1a3d54] text-white text-sm font-semibold px-4 py-2.5 rounded-lg opacity-60 cursor-not-allowed">
           <span className="material-symbols-outlined text-base">upload</span> Upload
         </button>
       </div>

@@ -148,7 +148,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#0d1b2a] text-white py-3.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#1a2f4a] transition-colors disabled:opacity-60 mt-1"
+            className="w-full bg-[#1a3d54] text-white py-3.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#153144] transition-colors disabled:opacity-60 mt-1"
           >
             {loading ? "Logging in…" : <>Log In to Dashboard <span className="material-symbols-outlined text-base">arrow_forward</span></>}
           </button>

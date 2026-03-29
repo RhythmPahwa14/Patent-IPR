@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { MessageCircle, Send, Minimize2, Loader2, Sparkles } from "lucide-react";
+import { Bot, Send, Minimize2, Loader2, Sparkles } from "lucide-react";
 
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -83,11 +83,11 @@ export default function ChatbotWidget() {
         {!isOpen && (
           <button
             onClick={toggleChat}
-            className="group relative flex h-[68px] w-[68px] items-center justify-center rounded-full bg-gradient-to-tr from-blue-700 via-indigo-600 to-sky-400 text-white shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-300 hover:scale-110 hover:shadow-[0_8px_40px_rgb(59,130,246,0.3)] active:scale-95"
+            className="group relative flex h-[68px] w-[68px] items-center justify-center rounded-full bg-[#1a3d54] text-white shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-300 hover:scale-110 hover:shadow-[0_8px_40px_rgb(26,61,84,0.3)] active:scale-95"
             aria-label="Open Chat"
           >
             <div className="absolute inset-0 rounded-full bg-white opacity-0 transition-opacity duration-300 group-hover:opacity-20"></div>
-            <MessageCircle size={32} className="relative z-10 transition-transform duration-300 group-hover:-rotate-12" />
+            <Bot size={32} className="relative z-10 transition-transform duration-300 group-hover:-rotate-12" />
           </button>
         )}
       </div>
@@ -142,7 +142,7 @@ export default function ChatbotWidget() {
                 <div
                   className={`relative max-w-[85%] rounded-[20px] px-5 py-3.5 text-[15px] shadow-sm transition-all ${msg.sender === "user"
                     ? "rounded-tr-sm bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-blue-500/20"
-                    : "rounded-tl-sm bg-white text-slate-800 ring-1 ring-slate-200/60 shadow-slate-200/50"
+                    : "rounded-tl-sm bg-white text-[#1a3d54] ring-1 ring-slate-200/60 shadow-slate-200/50"
                     } ${msg.isError ? "bg-red-50 text-red-600 ring-red-100" : ""}`}
                 >
                   {msg.html ? (
@@ -179,7 +179,7 @@ export default function ChatbotWidget() {
             <input
               ref={inputRef}
               type="text"
-              className="flex-1 bg-transparent px-4 py-3 text-[15px] font-medium text-slate-700 outline-none placeholder:text-slate-400 disabled:opacity-50"
+              className="flex-1 bg-transparent px-4 py-3 text-[15px] font-medium text-[#1a3d54] outline-none placeholder:text-[#1a3d54]/60 disabled:opacity-50"
               placeholder="Ask about IPR in India..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -194,7 +194,7 @@ export default function ChatbotWidget() {
               {isTyping ? <Loader2 size={18} className="animate-spin text-white/80" /> : <Sparkles size={18} className="text-white drop-shadow-sm" />}
             </button>
           </div>
-          <div className="mt-3 flex items-center justify-center gap-1.5 text-center text-[10px] font-medium text-slate-400">
+          <div className="mt-3 flex items-center justify-center gap-1.5 text-center text-[10px] font-medium text-[#1a3d54]/60">
             <span>Powered by</span>
             <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent font-bold">IPR-Assist AI</span>
           </div>

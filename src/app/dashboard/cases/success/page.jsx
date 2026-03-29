@@ -105,7 +105,7 @@ function SuccessContent() {
           </button>
           <button
             onClick={() => router.push("/dashboard")}
-            className="flex-1 bg-[#0d1b2a] text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-[#1a2f4a] transition-colors"
+            className="flex-1 bg-[#1a3d54] text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-[#153144] transition-colors"
           >
             Go to Dashboard
           </button>

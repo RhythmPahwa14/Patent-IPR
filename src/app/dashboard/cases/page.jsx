@@ -84,7 +84,7 @@ export default function CasesPage() {
         <button
           type="button"
           onClick={() => setShowFilingPopup(true)}
-          className="flex items-center gap-2 bg-[#0d1b2a] text-white text-sm font-semibold px-4 py-2.5 rounded-lg hover:bg-[#1a2f4a] transition-colors"
+          className="flex items-center gap-2 bg-[#1a3d54] text-white text-sm font-semibold px-4 py-2.5 rounded-lg hover:bg-[#153144] transition-colors"
         >
           <span className="material-symbols-outlined text-base">add</span>
           New Filing
@@ -167,7 +167,7 @@ export default function CasesPage() {
                 setActiveStatus(s);
                 setPage(0);
               }}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${activeStatus === s ? "bg-[#0d1b2a] text-white border-[#0d1b2a]" : "border-gray-200 text-gray-500 hover:border-[#0d1b2a]"}`}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${activeStatus === s ? "bg-[#1a3d54] text-white border-[#1a3d54]" : "border-gray-200 text-gray-500 hover:border-[#1a3d54]"}`}
             >
               {s}
             </button>
@@ -237,7 +237,7 @@ export default function CasesPage() {
             >
               <span className="material-symbols-outlined text-sm">chevron_left</span>
             </button>
-            <button className="w-7 h-7 rounded text-xs font-semibold bg-[#0d1b2a] text-white">{meta.totalPages === 0 ? 0 : page + 1}</button>
+            <button className="w-7 h-7 rounded text-xs font-semibold bg-[#1a3d54] text-white">{meta.totalPages === 0 ? 0 : page + 1}</button>
             <button
               onClick={() => setPage((p) => p + 1)}
               disabled={meta.totalPages === 0 || page >= meta.totalPages - 1}

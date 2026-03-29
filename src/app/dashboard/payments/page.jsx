@@ -91,7 +91,7 @@ export default function PaymentsPage() {
                 <td className="px-5 py-3.5 text-xs text-gray-500">{p.date}</td>
                 <td className="px-5 py-3.5">
                   {p.status === "DUE" && (
-                    <button className="text-xs font-semibold text-white bg-[#0d1b2a] px-3 py-1.5 rounded-lg hover:bg-[#1a2f4a] transition-colors">Pay Now</button>
+                    <button className="text-xs font-semibold text-white bg-[#1a3d54] px-3 py-1.5 rounded-lg hover:bg-[#153144] transition-colors">Pay Now</button>
                   )}
                 </td>
               </tr>

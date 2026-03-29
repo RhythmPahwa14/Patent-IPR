@@ -68,16 +68,12 @@ export default function DashboardTopbar({ title, searchPlaceholder = "Search cas
       </button>
 
       <div className="flex items-center gap-2 ml-auto">
-        {/* Notifications */}
-        <button className="relative p-1.5">
-          <span className="material-symbols-outlined text-gray-500 text-xl">notifications</span>
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-        </button>
+        
 
         {/* New filing button — desktop only */}
         <Link
           href="/dashboard/cases/new"
-          className="hidden lg:flex items-center gap-1.5 bg-[#0d1b2a] text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-[#1a2f4a] transition-colors"
+          className="hidden lg:flex items-center gap-1.5 bg-[#1a3d54] text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-[#153144] transition-colors"
         >
           <span className="material-symbols-outlined text-sm">add</span>
           NEW FILING
