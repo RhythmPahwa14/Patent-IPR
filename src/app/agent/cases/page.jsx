@@ -192,8 +192,8 @@ export default function AgentCasesPage() {
               {combined.map((c, i) => {
                 const detailHref =
                   c.filingCategory === "patent"
-                    ? `/agent/cases/${encodeURIComponent(c.displayId || "")}`
-                    : `/agent/non-patent-cases/${encodeURIComponent(c.displayId || "")}`;
+                    ? `/agent/cases/${encodeURIComponent(c.id || "")}`
+                    : `/agent/non-patent-cases/${encodeURIComponent(c.id || "")}`;
 
                 return (
                   <tr

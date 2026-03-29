@@ -177,7 +177,7 @@ export default function AgentNonPatentCasesPage() {
                     </td>
                     <td className="px-4 py-4">
                       <Link
-                        href={`/agent/non-patent-cases/${encodeURIComponent(displayId || "")}`}
+                        href={`/agent/non-patent-cases/${encodeURIComponent(c.id || "")}`}
                         className="text-xs font-semibold text-[#0d1b2a] hover:text-[#f5a623] transition-colors"
                       >
                         View
