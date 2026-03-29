@@ -108,7 +108,8 @@ export default function AgentDashboardPage() {
       .filter((f) => ["PENDING", "IN_REVIEW"].includes(f.status))
       .slice(0, 6)
       .map((f) => ({
-        id: f.referenceNumber || f.patentId || f.id,
+        id: f.id,
+        displayId: f.referenceNumber || f.patentId || f.id,
         title: f.title || "Untitled Filing",
         applicant: f.applicantName || "Applicant",
         status: f.status || "PENDING",
@@ -123,7 +124,8 @@ export default function AgentDashboardPage() {
       .filter((f) => ["APPROVED", "REJECTED"].includes(f.status))
       .slice(0, 3)
       .map((f) => ({
-        id: f.referenceNumber || f.patentId || f.id,
+        id: f.id,
+        displayId: f.referenceNumber || f.patentId || f.id,
         title: f.title || "Untitled",
         status: f.status,
         statusColor: STATUS_COLOR[f.status] || "bg-gray-100 text-gray-700",
@@ -135,7 +137,8 @@ export default function AgentDashboardPage() {
       .filter((f) => ["APPROVED", "REJECTED"].includes(f.status))
       .slice(0, 2)
       .map((f) => ({
-        id: f.referenceNumber || f.id,
+        id: f.id,
+        displayId: f.referenceNumber || f.id,
         title: f.title || f.referenceNumber || "Untitled",
         status: f.status,
         statusColor: STATUS_COLOR[f.status] || "bg-gray-100 text-gray-700",
@@ -233,7 +236,7 @@ export default function AgentDashboardPage() {
               <tbody>
                 {reviewQueue.map((c, i) => (
                   <tr key={c.id || i} className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${i === reviewQueue.length - 1 ? "border-0" : ""}`}>
-                    <td className="px-6 py-4 text-xs font-semibold text-[#0d1b2a]">{c.id || "-"}</td>
+                    <td className="px-6 py-4 text-xs font-semibold text-[#0d1b2a]">{c.displayId || "-"}</td>
                     <td className="px-6 py-4 text-sm font-semibold text-[#0d1b2a]">{c.title}</td>
                     <td className="px-6 py-4 text-xs text-gray-500">{c.applicant}</td>
                     <td className="px-6 py-4">

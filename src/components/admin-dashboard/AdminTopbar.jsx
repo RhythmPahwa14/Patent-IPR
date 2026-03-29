@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getStoredUser, getToken } from "@/lib/api";
@@ -8,6 +8,7 @@ export default function AdminTopbar({ searchPlaceholder = "Search filings, agent
   const router = useRouter();
   const [user, setUser] = useState({ name: "Admin", role: "ADMIN" });
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const token = getToken();
@@ -30,7 +31,21 @@ export default function AdminTopbar({ searchPlaceholder = "Search filings, agent
         role: storedUser.role || "ADMIN",
       });
     }
+
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    router.push("/login");
+  };
 
   return (
     <header className="h-14 bg-white border-b border-gray-100 flex items-center gap-3 px-4 shrink-0">
@@ -69,10 +84,10 @@ export default function AdminTopbar({ searchPlaceholder = "Search filings, agent
           ASSIGN CASES
         </Link>
 
-        <div className="relative">
-          <button 
-            onClick={() => setDropdownOpen(!dropdownOpen)} 
-            className="flex items-center gap-2 hover:bg-gray-50 rounded-lg p-1 transition-colors outline-none"
+        <div className="relative" ref={dropdownRef}>
+          <div 
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => setDropdownOpen(!dropdownOpen)}
           >
             <div className="text-right hidden md:block">
               <p className="text-xs font-semibold text-[#10243a] leading-tight">{user.name}</p>
@@ -81,7 +96,7 @@ export default function AdminTopbar({ searchPlaceholder = "Search filings, agent
             <div className="w-8 h-8 rounded-full bg-[#10243a] flex items-center justify-center text-white text-xs font-bold shrink-0">
               {user.name?.charAt(0) ?? "A"}
             </div>
-          </button>
+          </div>
           
           {dropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-lg shadow-lg py-1 z-50">

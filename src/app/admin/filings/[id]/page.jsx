@@ -59,7 +59,7 @@ export default function AdminFilingDetail({ params, searchParams }) {
 
   if (error || !filing) {
     return (
-      <div className="p-8 text-center">
+      <div className="p-8 text-center flex flex-col items-center justify-center">
         <p className="text-red-500 mb-4">{error || "Filing not found."}</p>
         <button onClick={() => router.back()} className="px-4 py-2 bg-[#10243a] text-white rounded-lg hover:bg-[#1a3655] text-sm font-semibold transition-colors">Go Back</button>
       </div>
@@ -92,38 +92,38 @@ export default function AdminFilingDetail({ params, searchParams }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
-            <h3 className="text-[11px] font-bold tracking-widest uppercase text-gray-400 border-b border-gray-100 pb-2">Applicant Information</h3>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Name</p>
-              <p className="font-semibold text-sm text-[#10243a]">{filing.applicantName || "-"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Email</p>
-              <p className="font-semibold text-sm text-[#10243a]">{filing.applicantEmail || "-"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Mobile</p>
-              <p className="font-semibold text-sm text-[#10243a]">{filing.applicantMobile || "-"}</p>
+            <h3 className="text-[11px] font-bold tracking-widest text-[#f5a623] uppercase border-b border-gray-100 pb-2">Applicant Information</h3>
+            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Name</p>
+                <p className="font-semibold text-sm text-[#10243a]">{filing.applicantName || filing.client?.name || "-"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Email</p>
+                <p className="font-semibold text-sm text-[#10243a] truncate">{filing.applicantEmail || filing.client?.email || "-"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Mobile</p>
+                <p className="font-semibold text-sm text-[#10243a]">{filing.applicantMobile || filing.client?.mobile || "-"}</p>
+              </div>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-[11px] font-bold tracking-widest uppercase text-gray-400 border-b border-gray-100 pb-2">Filing Information</h3>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Field of Invention / Class</p>
-              <p className="font-semibold text-sm text-[#10243a]">{filing.fieldOfInvention || "-"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Other / Notes</p>
-              <p className="font-semibold text-sm text-[#10243a]">{filing.fieldOfInventionOther || "-"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Assigned Agent</p>
-              <p className="font-semibold text-sm text-[#10243a]">{filing.assignedAgentName || filing.assignedAgentId || "-"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-1">Estimation</p>
-              <p className="font-semibold text-sm text-[#10243a]">{filing.estimation != null ? `₹${filing.estimation}` : "-"}</p>
+            <h3 className="text-[11px] font-bold tracking-widest text-[#f5a623] uppercase border-b border-gray-100 pb-2">Filing Information</h3>
+            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Category / Class</p>
+                <p className="font-semibold text-sm text-[#10243a]">{filing.type || filing.fieldOfInvention || "-"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Notes / Other</p>
+                <p className="font-semibold text-sm text-[#10243a] truncate">{filing.fieldOfInventionOther || "-"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Assigned Agent</p>
+                <p className="font-semibold text-sm text-[#10243a]">{filing.assignedAgentName || filing.assignedAgentId || "-"}</p>
+              </div>
             </div>
           </div>
         </div>

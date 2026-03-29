@@ -65,23 +65,25 @@ export async function apiRequest(path, { method = "GET", body, headers = {}, wit
 function normalizePatent(item = {}) {
   const agentId = item.assignedAgentId || item.assigned_agent_id || item.agentId || item.agent_id || item.assignedAgent?.id || item.agent?.id || item.assignedTo || item.assigned_to || null;
   const agentName = item.assignedAgentName || item.assigned_agent_name || item.agentName || item.agent_name || item.assignedAgent?.name || item.agent?.name || item.assignedAgent?.fullName || item.agent?.fullName || item.assignedToName || item.assigned_to_name || "";
+  
   return {
     id: item.id || item.patentId || item.referenceNumber || "",
-    referenceNumber: item.referenceNumber || item.referenceNo || "",
-    patentId: item.patentId || item.id || "",
+    referenceNumber: item.referenceNumber || item.referenceNo || item.reference_number || "",
+    patentId: item.patentId || item.patent_id || item.id || "",
     title: item.title || item.name || "",
-    fieldOfInvention: item.fieldOfInvention || item.category || "",
-    fieldOfInventionOther: item.fieldOfInventionOther || "",
-    abstractText: item.abstractText || item.description || "",
-    supportingDocumentUrl: item.supportingDocumentUrl || "",
-    applicantName: item.applicantName || "",
-    applicantEmail: item.applicantEmail || "",
-    applicantMobile: item.applicantMobile || "",
-    status: item.status || item.patentStatus || "",
+    fieldOfInvention: item.fieldOfInvention || item.field_of_invention || item.category || "",
+    fieldOfInventionOther: item.fieldOfInventionOther || item.field_of_invention_other || "",
+    abstractText: item.abstractText || item.abstract_text || item.abstract || item.description || item.briefDescription || item.brief_description || item.authorDetails || item.author_details || "",
+    supportingDocumentUrl: item.supportingDocumentUrl || item.supporting_document_url || item.supportingDocument || item.supporting_document || item.documentUrl || item.document_url || "",
+    applicantName: item.applicantName || item.applicant_name || item.client?.name || item.client?.fullName || item.user?.name || item.applicant?.name || "",
+    applicantEmail: item.applicantEmail || item.applicant_email || item.client?.email || item.user?.email || item.applicant?.email || "",
+    applicantMobile: item.applicantMobile || item.applicant_mobile || item.client?.mobile || item.user?.mobile || item.applicant?.mobile || "",
+    status: item.status || item.patentStatus || item.patent_status || "",
     assignedAgentId: agentId,
     assignedAgentName: agentName,
-    submittedAt: item.submittedAt || item.createdAt || null,
-    updatedAt: item.updatedAt || item.createdAt || null,
+    submittedAt: item.submittedAt || item.submitted_at || item.createdAt || item.created_at || null,
+    updatedAt: item.updatedAt || item.updated_at || item.createdAt || item.created_at || null,
+    raw: item,
   };
 }
 
@@ -251,7 +253,12 @@ export async function getAgentPatentFilings({ status, search, page = 0, size = 2
     return { ok: false, items: [], pagination: { page, size, totalElements: 0, totalPages: 0 }, status: response.status, data: response.data };
   }
 
-  const list = extractPatentArray(response.data).map(normalizePatent);
+  let list = extractPatentArray(response.data).map(normalizePatent);
+  list = list.filter(i => {
+    const ref = (i.referenceNumber || "").toUpperCase();
+    const type = (i.raw?.type || i.raw?.filingType || "").toUpperCase();
+    return !ref.includes("-TM-") && !ref.includes("-CR-") && !ref.includes("-DS-") && type !== "NON-PATENT";
+  });
   const payload = response.data?.data || {};
   return {
     ok: true,
@@ -274,7 +281,7 @@ export async function getAgentPatentFilingById(id = "") {
   const response = await apiRequest(`/api/agent/patent-filings/${encodeURIComponent(filingId)}`, { method: "GET" });
   return {
     ok: response.ok,
-    filing: response.ok ? normalizePatent(response.data?.data || response.data || {}) : null,
+    filing: response.ok ? normalizePatent(response.data?.data?.patent || response.data?.data?.filing || response.data?.data || response.data || {}) : null,
     status: response.status,
     data: response.data,
   };
@@ -351,10 +358,10 @@ export async function updateAgentNonPatentFilingStatus(filingId = "", status = "
 
 function normalizeAdminFiling(item = {}) {
   return {
-    id: item.id || item.filingId || item.referenceNumber || "",
-    referenceNumber: item.referenceNumber || item.referenceNo || "",
-    title: item.title || item.name || "",
-    type: item.type || item.filingType || "",
+    id: item.id || item.filingId || item.patentId || item.patent_id || item.trademarkId || item.copyrightId || item.designId || item.referenceNumber || "",
+    referenceNumber: item.referenceNumber || item.referenceNo || item.reference_number || "",
+    title: item.title || item.name || item.trademarkName || item.titleOfWork || item.articleName || "",
+    type: item.type || item.filingType || (item.trademarkId ? "TRADEMARK" : item.copyrightId ? "COPYRIGHT" : item.designId ? "DESIGN" : ""),
     status: item.status || "",
     applicantName: item.applicantName || "",
     assignedAgentId: item.assignedAgentId || item.assigned_agent_id || item.agentId || item.agent_id || item.assignedAgent?.id || item.agent?.id || item.assignedTo || item.assigned_to || null,
@@ -988,7 +995,12 @@ export async function getAdminPatentFilings({ status, userId, search, page = 0, 
     return { ok: false, items: [], pagination: { page, size, totalElements: 0, totalPages: 0 }, status: response.status, data: response.data };
   }
 
-  const list = extractAdminArray(response.data).map(normalizeAdminFiling);
+  let list = extractAdminArray(response.data).map(normalizeAdminFiling);
+  list = list.filter(i => {
+    const ref = (i.referenceNumber || "").toUpperCase();
+    const type = (i.type || "").toUpperCase();
+    return !ref.includes("-TM-") && !ref.includes("-CR-") && !ref.includes("-DS-") && type !== "NON-PATENT";
+  });
   return { ok: true, items: list, pagination: extractAdminPageable(response.data, page, size, list.length), status: response.status, data: response.data };
 }
 
@@ -997,7 +1009,7 @@ export async function getAdminPatentFilingById(id = "") {
   const filingId = String(id || "").trim();
   if (!filingId) return { ok: false, status: 400, data: { message: "Filing ID required." } };
   const response = await apiRequest(`/api/admin/patent-filings/${encodeURIComponent(filingId)}`, { method: "GET" });
-  return { ok: response.ok, filing: response.ok ? normalizeAdminFiling(response.data?.data || response.data || {}) : null, status: response.status, data: response.data };
+  return { ok: response.ok, filing: response.ok ? normalizeAdminFiling(response.data?.data?.patent || response.data?.data?.filing || response.data?.data || response.data || {}) : null, status: response.status, data: response.data };
 }
 
 // PATCH /api/admin/patent-filings/{id}/status
@@ -1051,7 +1063,7 @@ export async function getAdminNonPatentFilingById(id = "") {
   const filingId = String(id || "").trim();
   if (!filingId) return { ok: false, status: 400, data: { message: "Filing ID required." } };
   const response = await apiRequest(`/api/admin/non-patent-filings/${encodeURIComponent(filingId)}`, { method: "GET" });
-  return { ok: response.ok, filing: response.ok ? normalizeAdminFiling(response.data?.data || response.data || {}) : null, status: response.status, data: response.data };
+  return { ok: response.ok, filing: response.ok ? normalizeAdminFiling(response.data?.data?.filing || response.data?.data || response.data || {}) : null, status: response.status, data: response.data };
 }
 
 // PATCH /api/admin/non-patent-filings/{id}/status
