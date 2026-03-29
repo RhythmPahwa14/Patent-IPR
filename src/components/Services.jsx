@@ -1,10 +1,9 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
 
 const services = [
   {
-    icon: <span className="material-symbols-outlined text-blue-600 text-3xl">policy</span>,
+    icon: <span className="material-symbols-outlined text-[#1a3d54] text-3xl">policy</span>,
     title: "Patent Filing",
     desc: "Strategic international and domestic patent drafting, filing, and prosecution services.",
     stat: "120+ Active Applications",
@@ -12,7 +11,7 @@ const services = [
     featured: true,
   },
   {
-    icon: <span className="material-symbols-outlined text-gray-700 text-3xl">verified</span>,
+    icon: <span className="material-symbols-outlined text-gray-500 text-3xl">verified</span>,
     title: "Trademark Protection",
     desc: "Secure your brand identity globally. Search, registration, and monitoring services.",
     stat: "300+ Registered Marks",
@@ -20,7 +19,7 @@ const services = [
     featured: false,
   },
   {
-    icon: <span className="material-symbols-outlined text-gray-700 text-3xl">copyright</span>,
+    icon: <span className="material-symbols-outlined text-gray-500 text-3xl">copyright</span>,
     title: "Copyright Registration",
     desc: "Full-scope protection for creative works, software codes, and architectural designs.",
     stat: "500+ Works Registered",
@@ -28,7 +27,7 @@ const services = [
     featured: false,
   },
   {
-    icon: <span className="material-symbols-outlined text-gray-700 text-3xl">architecture</span>,
+    icon: <span className="material-symbols-outlined text-gray-500 text-3xl">architecture</span>,
     title: "Design Registration",
     desc: "Protect the unique aesthetic elements of your products from visual infringement.",
     stat: "80+ Designs Protected",
@@ -36,7 +35,7 @@ const services = [
     featured: false,
   },
   {
-    icon: <span className="material-symbols-outlined text-gray-700 text-3xl">monitoring</span>,
+    icon: <span className="material-symbols-outlined text-gray-500 text-3xl">monitoring</span>,
     title: "Portfolio Management",
     desc: "360° visibility into your IP assets. Renewals, alerts, valuation, and optimization.",
     stat: "1,000+ Assets Tracked",
@@ -44,7 +43,7 @@ const services = [
     featured: false,
   },
   {
-    icon: <span className="material-symbols-outlined text-gray-700 text-3xl">calculate</span>,
+    icon: <span className="material-symbols-outlined text-gray-500 text-3xl">calculate</span>,
     title: "Cost Estimator",
     desc: "Transparent filing fee calculator for global patent and trademark registration.",
     stat: "50+ Jurisdictions",
@@ -54,69 +53,44 @@ const services = [
 ];
 
 function ServiceCard({ service, index }) {
-  const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
-      { threshold: 0.15 }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
-
   return (
-    <div
-      ref={ref}
-      style={{
-        transitionDelay: `${index * 50}ms`,
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(20px)",
-        transition: "opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)",
-      }}
-      className={`relative group flex flex-col rounded-[2rem] p-8 transition-all duration-300
+    <div className={`relative group flex flex-col p-8 sm:p-10 rounded-[2.5rem] bg-white transition-all duration-300 border
         ${service.featured
-          ? "bg-white shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-blue-100"
-          : "bg-white/50 border border-black/[0.04] hover:bg-white hover:shadow-[0_8px_20px_rgb(0,0,0,0.04)]"
+          ? "border-[#1a3d54]/20 shadow-[0_20px_40px_rgba(26,61,84,0.08)] -translate-y-2 z-10"
+          : "border-[#e0eaf3] shadow-[0_8px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1"
         }`}
     >
-      {/* Icon */}
-      <div className="w-14 h-14 rounded-full bg-[#f1f5f9] flex items-center justify-center mb-6">
+      <div className={`w-14 h-14 flex items-center justify-center mb-8 rounded-2xl ${service.featured ? "bg-gradient-to-br from-[#1a3d54]/10 to-transparent" : "bg-[#f8f9fa]"} border border-[#e0eaf3]`}>
         {service.icon}
       </div>
 
-      {/* Title */}
-      <h3 className="text-xl font-bold text-gray-900 tracking-tight mb-3">
+      <h3 className="text-[22px] font-bold text-[#1a1a1a] tracking-tight mb-3">
         {service.title}
         {service.featured && (
-           <span className="ml-3 inline-block align-middle px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-wider">
+           <span className="ml-3 inline-block align-middle px-2.5 py-1 bg-[#1a3d54] text-white text-[10px] font-bold uppercase tracking-widest rounded-full">
              Popular
            </span>
         )}
       </h3>
 
-      {/* Description */}
-      <p className="text-gray-500 text-sm leading-relaxed mb-6 flex-1 font-medium">
+      <p className="text-[#4b5563] text-[16px] leading-relaxed mb-8 flex-1">
         {service.desc}
       </p>
 
-      {/* Micro stat */}
-      <div className="text-xs font-semibold text-gray-400 mb-6 flex items-center gap-1.5">
-        <span className="material-symbols-outlined text-[14px]">analytics</span>
+      <div className="text-[13px] font-semibold text-[#1a1a1a] mb-8 flex items-center gap-2 border-t border-[#e0eaf3] pt-6">
+        <span className="material-symbols-outlined text-[16px] text-[#1a3d54]">analytics</span>
         {service.stat}
       </div>
 
-      {/* CTA button */}
       <Link
         href="#contact"
-        className={`inline-flex items-center justify-center w-max px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300
+        className={`inline-flex items-center w-max text-[14px] font-medium transition-all
           ${service.featured
-            ? "bg-slate-900 text-white hover:bg-black hover:scale-105"
-            : "bg-gray-100 text-slate-800 hover:bg-gray-200"
+            ? "bg-[#1a3d54] text-white px-6 py-2.5 rounded-full hover:bg-[#112a3c] shadow-md shadow-[#1a3d54]/20 hover:-translate-y-0.5"
+            : "flex items-center gap-3 border-l-2 border-[#1a3d54] pl-4 text-[#1a3d54] hover:opacity-75 font-bold"
           }`}
       >
-        {service.cta}
+        {service.cta} {service.featured ? "" : ""}
       </Link>
     </div>
   );
@@ -124,30 +98,25 @@ function ServiceCard({ service, index }) {
 
 export default function Services() {
   return (
-    <section id="services" className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="bg-[#F4F5F7] rounded-[3rem] px-8 py-16 md:p-20 shadow-inner">
-          {/* Heading */}
-          <div className="text-center w-full flex flex-col justify-center items-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm mb-6 border border-gray-100">
-              <span className="material-symbols-outlined text-sm text-blue-500">workspaces</span>
-              <span className="text-xs font-bold text-gray-700 tracking-wide">Capabilities</span>
-            </div>
-            
-            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 text-center tracking-tight leading-tight mb-6">
-              Protect every dimension of <br className="hidden md:block" /> your intellectual property
-            </h2>
-            <p className="text-center text-gray-500 text-lg max-w-2xl font-medium tracking-tight">
-              End-to-end solutions for innovators, startups, and enterprises — from intelligent filing to continuous enforcement.
-            </p>
+    <section id="services" className="py-24 md:py-32 bg-[#f8f9fa]">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="w-full flex flex-col items-center text-center mb-16 md:mb-24">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-[#e0eaf3] shadow-sm rounded-full mb-6">
+            <span className="text-[11px] font-bold text-[#4b5563] tracking-[0.15em] uppercase">Capabilities</span>
           </div>
+          
+          <h2 className="text-[44px] md:text-[60px] font-medium text-[#1a1a1a] tracking-tight leading-[1.05] mb-6">
+            Protect every dimension <br className="hidden md:block"/> of intellectual property.
+          </h2>
+          <p className="text-[#4b5563] text-[18px] md:text-[20px] font-normal tracking-tight max-w-[600px] leading-relaxed">
+            End-to-end solutions for innovators, startups, and enterprises — from intelligent filing to continuous global enforcement.
+          </p>
+        </div>
 
-          {/* Cards */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service, i) => (
-              <ServiceCard key={service.title} service={service} index={i} />
-            ))}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {services.map((service, i) => (
+            <ServiceCard key={service.title} service={service} index={i} />
+          ))}
         </div>
       </div>
     </section>

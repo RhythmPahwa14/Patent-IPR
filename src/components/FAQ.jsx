@@ -20,35 +20,35 @@ export default function FAQ() {
   const [open, setOpen] = useState(null);
 
   return (
-    <section id="pricing" className="py-24 bg-white">
-      <div className="max-w-3xl mx-auto px-6">
-        <h2 className="text-4xl md:text-5xl font-bold text-slate-900 text-center mb-14 tracking-tight leading-tight">
-          Frequently asked questions
+    <section id="pricing" className="py-24 md:py-32 bg-[#f8f9fa] border-b border-[#e0eaf3]">
+      <div className="max-w-4xl mx-auto px-6">
+        <h2 className="text-[44px] md:text-[60px] font-medium text-[#1a1a1a] tracking-tight leading-[1.05] mb-16 text-center">
+          Frequently asked questions.
         </h2>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col border-t border-[#e0eaf3]">
           {faqs.map((faq, i) => (
             <div
               key={i}
-              className="bg-gray-50/50 border border-gray-100 rounded-[1.5rem] overflow-hidden hover:bg-gray-50 transition-colors"
+              className="border-b border-[#e0eaf3] hover:bg-white transition-colors"
             >
               <button
-                className="w-full flex items-center justify-between px-8 py-6 text-left group"
+                className="w-full flex items-center justify-between py-6 text-left group px-6"
                 onClick={() => setOpen(open === i ? null : i)}
               >
-                <span className="font-bold text-slate-900 text-lg pr-4 tracking-tight group-hover:text-blue-600 transition-colors">
+                <span className="font-bold text-[#1a1a1a] text-[18px] md:text-[22px] pr-4 tracking-tight transition-colors">
                   {faq.q}
                 </span>
                 <span
-                  className={`w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm border border-gray-100 text-gray-500 shrink-0 transition-transform ${
-                    open === i ? "rotate-180 bg-blue-50 border-blue-100 text-blue-600" : ""
+                  className={`flex items-center justify-center text-[#1a3d54] shrink-0 transition-transform ${
+                    open === i ? "rotate-180" : ""
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[18px]">expand_more</span>
+                  <span className="material-symbols-outlined text-[28px]">expand_more</span>
                 </span>
               </button>
               {open === i && (
-                <div className="px-8 pb-8 pt-2 text-gray-500 text-[15px] font-medium leading-relaxed">
+                <div className="px-6 pb-8 pt-2 text-[#4b5563] text-[16px] md:text-[18px] leading-relaxed max-w-3xl">
                   {faq.a}
                 </div>
               )}

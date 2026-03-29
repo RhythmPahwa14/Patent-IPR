@@ -32,39 +32,36 @@ export default function CTAContact() {
   };
 
   return (
-    <section id="contact" className="py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="bg-[#F4F5F7] rounded-[3rem] p-8 md:p-16 grid md:grid-cols-2 gap-12 lg:gap-20 items-start">
+    <section id="contact" className="py-24 md:py-32 bg-white border-b border-[#e0eaf3]">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="bg-[#f8f9fa] border border-[#e0eaf3] rounded-[3rem] p-8 md:p-16 grid md:grid-cols-2 gap-12 lg:gap-24 items-start shadow-sm">
           {/* Left */}
           <div className="flex flex-col gap-6">
-            <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full w-max shadow-sm border border-gray-100">
-              <span className="material-symbols-outlined text-sm text-blue-500">support_agent</span>
-              <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">
-                Helpdesk
-              </span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-[#e0eaf3] rounded-full mb-2 w-max shadow-sm">
+               <span className="text-[11px] font-bold text-[#4b5563] tracking-[0.15em] uppercase">Helpdesk</span>
             </div>
 
-            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight tracking-tight">
-              Start your IP filing with a professional team
+            <h2 className="text-[44px] md:text-[56px] font-medium text-[#1a1a1a] leading-[1.1] tracking-tight">
+              Start your IP filing <br /> with the experts.
             </h2>
-            <p className="text-gray-500 text-lg font-medium leading-relaxed">
+            <p className="text-[#4b5563] text-[18px] md:text-[20px] font-normal tracking-tight leading-relaxed max-w-[400px]">
               PATENT-IPR supports startups, SMEs, research groups, and enterprises
               with structured filing workflows for patents, trademarks, designs,
-              and copyright across India.
+              and copyright.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 mt-4">
-              <div className="rounded-2xl border border-black/[0.04] bg-white flex-1 p-5 shadow-sm">
-                <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">
+            <div className="flex flex-col sm:flex-row gap-4 mt-8">
+              <div className="border border-[#e0eaf3] bg-white rounded-2xl flex-1 p-6 shadow-sm">
+                <p className="text-[11px] uppercase tracking-widest text-[#4b5563] font-bold mb-2">
                   Response Window
                 </p>
-                <p className="text-sm font-bold text-slate-900">Within 1 business day</p>
+                <p className="text-[18px] font-bold text-[#1a1a1a]">Within 1 business day</p>
               </div>
-              <div className="rounded-2xl border border-black/[0.04] bg-white flex-1 p-5 shadow-sm">
-                <p className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1">
-                  Consultation Hours
+              <div className="border border-[#e0eaf3] bg-white rounded-2xl flex-1 p-6 shadow-sm">
+                <p className="text-[11px] uppercase tracking-widest text-[#4b5563] font-bold mb-2">
+                  Consultation
                 </p>
-                <p className="text-sm font-bold text-slate-900">Mon-Sat, 10am - 6pm</p>
+                <p className="text-[18px] font-bold text-[#1a1a1a]">Mon-Sat, 10am - 6pm</p>
               </div>
             </div>
           </div>
@@ -72,19 +69,18 @@ export default function CTAContact() {
           {/* Right – Form */}
           <form
             onSubmit={handleSubmit}
-            className="bg-white border border-gray-100 rounded-[2rem] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col gap-5"
+            className="flex flex-col gap-6 w-full"
           >
-            <div className="mb-2">
-              <h3 className="text-2xl font-bold text-slate-900 tracking-tight">Request a Consultation</h3>
-              <p className="text-[15px] font-medium text-gray-500 mt-2 leading-relaxed">
-                Share your requirement. Our team will contact you with scope,
-                process, and next steps.
+            <div className="mb-4">
+              <h3 className="text-[28px] font-bold text-[#1a1a1a] tracking-tight mb-2">Request Consultation</h3>
+              <p className="text-[16px] font-medium text-[#4b5563] leading-relaxed">
+                Provide your details below. Our technical experts will reach out regarding next steps.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">
+                <label className="text-[12px] font-bold text-[#1a1a1a] uppercase tracking-widest">
                   Full Name
                 </label>
                 <input
@@ -93,12 +89,12 @@ export default function CTAContact() {
                   placeholder="Your name"
                   value={form.fullName}
                   onChange={handleChange}
-                  className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all"
+                  className="bg-white border text-[#1a1a1a] border-[#e0eaf3] rounded-xl px-4 py-3.5 text-[15px] font-medium focus:outline-none focus:border-[#1a3d54] focus:ring-1 focus:ring-[#1a3d54] transition-all shadow-sm"
                   required
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">
+                <label className="text-[12px] font-bold text-[#1a1a1a] uppercase tracking-widest">
                   Organization
                 </label>
                 <input
@@ -107,14 +103,14 @@ export default function CTAContact() {
                   placeholder="Company/Startup"
                   value={form.organization}
                   onChange={handleChange}
-                  className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all"
+                  className="bg-white border text-[#1a1a1a] border-[#e0eaf3] rounded-xl px-4 py-3.5 text-[15px] font-medium focus:outline-none focus:border-[#1a3d54] focus:ring-1 focus:ring-[#1a3d54] transition-all shadow-sm"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">
+                <label className="text-[12px] font-bold text-[#1a1a1a] uppercase tracking-widest">
                   Email
                 </label>
                 <input
@@ -123,13 +119,13 @@ export default function CTAContact() {
                   placeholder="name@example.com"
                   value={form.email}
                   onChange={handleChange}
-                  className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all"
+                  className="bg-white border text-[#1a1a1a] border-[#e0eaf3] rounded-xl px-4 py-3.5 text-[15px] font-medium focus:outline-none focus:border-[#1a3d54] focus:ring-1 focus:ring-[#1a3d54] transition-all shadow-sm"
                   required
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">
-                  Phone (India)
+                <label className="text-[12px] font-bold text-[#1a1a1a] uppercase tracking-widest">
+                  Phone
                 </label>
                 <input
                   type="tel"
@@ -137,21 +133,21 @@ export default function CTAContact() {
                   placeholder="+91 98765 43210"
                   value={form.phone}
                   onChange={handleChange}
-                  className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all"
+                  className="bg-white border text-[#1a1a1a] border-[#e0eaf3] rounded-xl px-4 py-3.5 text-[15px] font-medium focus:outline-none focus:border-[#1a3d54] focus:ring-1 focus:ring-[#1a3d54] transition-all shadow-sm"
                   required
                 />
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-               <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">
+               <label className="text-[12px] font-bold text-[#1a1a1a] uppercase tracking-widest">
                   Service Needed
                </label>
                <select
                  name="service"
                  value={form.service}
                  onChange={handleChange}
-                 className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all appearance-none"
+                 className="bg-white border text-[#1a1a1a] border-[#e0eaf3] rounded-xl px-4 py-3.5 text-[15px] font-medium focus:outline-none focus:border-[#1a3d54] focus:ring-1 focus:ring-[#1a3d54] transition-all appearance-none shadow-sm"
                >
                  {services.map((s) => (
                    <option key={s} value={s}>
@@ -162,7 +158,7 @@ export default function CTAContact() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest pl-1">
+              <label className="text-[12px] font-bold text-[#1a1a1a] uppercase tracking-widest">
                 Message
               </label>
               <textarea
@@ -170,21 +166,21 @@ export default function CTAContact() {
                 placeholder="Briefly describe your idea, current stage, and what support you need."
                 value={form.message}
                 onChange={handleChange}
-                rows={3}
-                className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[15px] font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all resize-none"
+                rows={4}
+                className="bg-white border text-[#1a1a1a] border-[#e0eaf3] rounded-xl px-4 py-3.5 text-[15px] font-medium focus:outline-none focus:border-[#1a3d54] focus:ring-1 focus:ring-[#1a3d54] transition-all resize-none shadow-sm"
               />
             </div>
 
-            <div className="mt-2">
+            <div className="mt-4">
               <button
                 type="submit"
-                className="w-full bg-slate-900 text-white font-bold py-4 rounded-xl hover:bg-black transition-colors text-[15px] tracking-wide shadow-lg hover:-translate-y-0.5"
+                className="w-full bg-[#1a3d54] text-white px-8 py-4 uppercase tracking-widest text-[14px] font-medium hover:bg-[#112a3c] rounded-full transition-colors shadow-lg shadow-[#1a3d54]/20 hover:-translate-y-0.5"
               >
                 Submit Request
               </button>
             </div>
             
-            <p className="text-[11px] font-medium text-gray-400 text-center mt-2 px-4 leading-relaxed">
+            <p className="text-[11.5px] font-medium text-[#4b5563] mt-2 leading-relaxed text-center">
                By submitting, you agree to be contacted regarding your query and service requirements.
             </p>
           </form>
