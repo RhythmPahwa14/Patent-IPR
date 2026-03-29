@@ -18,7 +18,7 @@ export default function ProfilePage() {
   const handle = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const save = () => { setSaved(true); setTimeout(() => setSaved(false), 2500); };
 
-  const logout = () => { localStorage.removeItem("token"); localStorage.removeItem("user"); router.push("/login"); };
+  const logout = () => { localStorage.removeItem("token"); localStorage.removeItem("user"); router.push("/"); };
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -61,7 +61,7 @@ export default function ProfilePage() {
         </div>
 
         <p className="text-xs text-gray-400 mt-4">
-          Profile update API is not available in the provided backend contract yet. Save currently updates this screen only.
+          Profile update API is not available right now as backend api is not created yet. Save currently updates this screen only.
         </p>
 
         <div className="flex items-center gap-3 mt-6 pt-5 border-t border-gray-100">

@@ -37,7 +37,7 @@ export default function AgentTopbar({ searchPlaceholder = "Search cases, applica
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    router.push("/login");
+    router.push("/");
   };
 
   return (
