@@ -96,7 +96,7 @@ export default function AdminTopbar({ searchPlaceholder = "Search filings, agent
             <div className="w-8 h-8 rounded-full bg-[#10243a] flex items-center justify-center text-white text-xs font-bold shrink-0">
               {user.name?.charAt(0) ?? "A"}
             </div>
-          </button>
+          </div>
           
           {dropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-lg shadow-lg py-1 z-50">
