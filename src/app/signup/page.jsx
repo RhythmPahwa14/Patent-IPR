@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { buildApiUrl } from "@/lib/api";
 
@@ -288,13 +289,18 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-between py-10 px-6 pt-16">
+    <div className="min-h-screen relative overflow-hidden border-b border-[#e0eaf3] bg-gradient-to-br from-[#e0eaf3] to-[#f8f9fa] shadow-[inset_0_40px_100px_rgba(30,58,138,0.03)] flex flex-col items-center justify-between py-10 px-6 pt-16">
       <div className="w-full max-w-sm">
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 bg-[#0d1b2a] rounded-lg flex items-center justify-center">
-            <span className="material-symbols-outlined text-[#f5a623] text-xl">verified_user</span>
-          </div>
-          <span className="text-sm font-extrabold tracking-tight text-[#0d1b2a]">PATENT-IPR</span>
+          <Image
+            src="/logobg.png"
+            alt="Patent-IPR"
+            width={44}
+            height={44}
+            priority
+            className="h-11 w-auto"
+          />
+          <span className="text-[22px] font-bold tracking-tight text-[#0d1b2a]">PATENT-IPR</span>
         </div>
 
         <h1 className="text-3xl font-bold text-[#0d1b2a] mb-4">Create Your Account</h1>

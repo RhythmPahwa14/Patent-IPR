@@ -2,22 +2,19 @@ import Link from "next/link";
 
 export default function Hero() {
   return (
-    <section className="relative bg-gradient-to-br from-[#e0eaf3] to-[#f8f9fa] shadow-[inset_0_40px_100px_rgba(30,58,138,0.03)] pt-32 pb-24 md:pt-48 md:pb-40 px-6 overflow-hidden border-b border-[#e0eaf3]">
+    <section className="relative bg-gradient-to-br from-[#e0eaf3] to-[#f8f9fa] shadow-[inset_0_40px_100px_rgba(30,58,138,0.03)] pt-32 pb-24 md:pt-20 md:pb-40 px-6 overflow-hidden border-b border-[#e0eaf3]">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
         <div className="lg:col-span-7 flex flex-col items-start z-10">
           <div className="mb-6">
-            <span className="text-[11px] font-bold text-[#4b5563] uppercase tracking-[0.2em] bg-white/50 px-3 py-1.5 rounded-full border border-white/60 shadow-sm backdrop-blur-md">
-              Since 2025 • IP Management
-            </span>
           </div>
 
           <h1 className="text-[56px] sm:text-[72px] xl:text-[88px] font-medium text-[#1a1a1a] tracking-tight leading-[1.05] mb-8">
-            The standard <br /> for intellectual <br /> property.
+            Smart IP Management <br /> Not Paperwork.
           </h1>
 
           <p className="text-[#4b5563] text-[18px] md:text-[22px] font-normal tracking-tight mb-12 max-w-[540px] leading-relaxed">
-            Institutional-grade patent, trademark, and copyright management. 
-            Built for enterprise legal teams, law firms, and high-growth innovators.
+            File, manage, and protect your patents, trademarks, and copyrights - all in one platform.
+            Built for innovators, startups, and enterprises.
           </p>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-8 w-full sm:w-auto">
