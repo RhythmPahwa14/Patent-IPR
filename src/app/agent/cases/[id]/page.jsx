@@ -289,7 +289,7 @@ export default function AgentCaseDetailPage() {
                 href={filing.supportingDocumentUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 bg-[#f5a623] text-[#0d1b2a] text-xs font-bold px-4 py-2.5 rounded-lg hover:bg-[#e09610] transition-colors"
+                className="inline-flex items-center gap-2 bg-[#e0eaf3] text-[#1a3d54] text-xs font-bold px-4 py-2.5 rounded-lg hover:bg-[#d2deea] transition-colors"
               >
                 <span className="material-symbols-outlined text-sm">download</span>
                 Open Attachment

@@ -65,7 +65,7 @@ export default function ProfilePage() {
         </p>
 
         <div className="flex items-center gap-3 mt-6 pt-5 border-t border-gray-100">
-          <button onClick={save} className="bg-[#0d1b2a] text-white text-sm font-semibold px-6 py-2.5 rounded-lg hover:bg-[#1a2f4a] transition-colors">
+          <button onClick={save} className="bg-[#1a3d54] text-white text-sm font-semibold px-6 py-2.5 rounded-lg hover:bg-[#153144] transition-colors">
             {saved ? "Saved ✓" : "Save Changes"}
           </button>
           <button className="text-sm font-medium text-gray-500 px-4 py-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">

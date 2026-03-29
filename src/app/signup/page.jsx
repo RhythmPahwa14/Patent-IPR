@@ -506,7 +506,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading || !isFormValid}
-            className="w-full bg-[#0d1b2a] text-white py-3.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#1a2f4a] transition-colors disabled:opacity-60 disabled:cursor-not-allowed mt-1"
+            className="w-full bg-[#1a3d54] text-white py-3.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#153144] transition-colors disabled:opacity-60 disabled:cursor-not-allowed mt-1"
           >
             {loading ? (
               "Creating Account..."

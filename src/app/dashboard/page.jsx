@@ -202,7 +202,7 @@ export default function DashboardPage() {
               <span className="material-symbols-outlined text-sm">chevron_left</span>
             </button>
             {[1, 2, 3].map((n) => (
-              <button key={n} className={`w-7 h-7 rounded text-xs font-semibold transition-colors ${n === 1 ? "bg-[#0d1b2a] text-white" : "text-gray-500 hover:bg-gray-100"}`}>{n}</button>
+              <button key={n} className={`w-7 h-7 rounded text-xs font-semibold transition-colors ${n === 1 ? "bg-[#1a3d54] text-white" : "text-gray-500 hover:bg-gray-100"}`}>{n}</button>
             ))}
             <button className="w-7 h-7 flex items-center justify-center rounded text-gray-400 hover:bg-gray-100 transition-colors">
               <span className="material-symbols-outlined text-sm">chevron_right</span>
@@ -217,7 +217,7 @@ export default function DashboardPage() {
         <div className="bg-[#0d1b2a] rounded-xl p-6 text-white">
           <h3 className="text-lg font-bold mb-2">Need Legal Consultation?</h3>
           <p className="text-sm text-white/60 mb-4">Connect with our senior patent attorneys for strategic IP advice.</p>
-          <Link href="/dashboard/messages" className="inline-flex items-center gap-2 bg-[#f5a623] text-[#0d1b2a] text-xs font-bold px-4 py-2.5 rounded-lg hover:bg-[#e09610] transition-colors">
+          <Link href="/dashboard/messages" className="inline-flex items-center gap-2 bg-[#e0eaf3] text-[#1a3d54] text-xs font-bold px-4 py-2.5 rounded-lg hover:bg-[#d2deea] transition-colors">
             <span className="material-symbols-outlined text-sm">chat</span> Start Consultation
           </Link>
         </div>

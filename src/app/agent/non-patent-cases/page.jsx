@@ -74,7 +74,7 @@ export default function AgentNonPatentCasesPage() {
         </div>
         <Link
           href="/agent/cases"
-          className="flex items-center gap-2 border border-[#0d1b2a] text-[#0d1b2a] text-sm font-semibold px-4 py-2.5 rounded-lg hover:bg-[#0d1b2a] hover:text-white transition-colors"
+          className="flex items-center gap-2 border border-[#1a3d54] text-[#1a3d54] text-sm font-semibold px-4 py-2.5 rounded-lg hover:bg-[#1a3d54] hover:text-white transition-colors"
         >
           <span className="material-symbols-outlined text-base">science</span>
           Patent Filings
@@ -105,7 +105,7 @@ export default function AgentNonPatentCasesPage() {
               key={s}
               onClick={() => setActiveStatus(s)}
               className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
-                activeStatus === s ? "bg-[#0d1b2a] text-white border-[#0d1b2a]" : "border-gray-200 text-gray-500 hover:border-[#0d1b2a]"
+                activeStatus === s ? "bg-[#1a3d54] text-white border-[#1a3d54]" : "border-gray-200 text-gray-500 hover:border-[#1a3d54]"
               }`}
             >
               {s}
@@ -120,7 +120,7 @@ export default function AgentNonPatentCasesPage() {
               key={t}
               onClick={() => setActiveType(t)}
               className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
-                activeType === t ? "bg-[#f5a623] text-white border-[#f5a623]" : "border-gray-200 text-gray-500 hover:border-[#f5a623]"
+                activeType === t ? "bg-[#e0eaf3] text-[#1a3d54] border-[#e0eaf3]" : "border-gray-200 text-gray-500 hover:border-[#e0eaf3]"
               }`}
             >
               {t}

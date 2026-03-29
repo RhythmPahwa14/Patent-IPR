@@ -150,7 +150,7 @@ export default function MessagesPage() {
                 />
                 <button
                   onClick={send}
-                  className="w-8 h-8 bg-[#0d1b2a] rounded-lg flex items-center justify-center hover:bg-[#1a2f4a] transition-colors"
+                  className="w-8 h-8 bg-[#1a3d54] rounded-lg flex items-center justify-center hover:bg-[#153144] transition-colors"
                 >
                   <span className="material-symbols-outlined text-white text-base">send</span>
                 </button>

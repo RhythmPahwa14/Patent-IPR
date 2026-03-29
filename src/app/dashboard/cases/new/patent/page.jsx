@@ -534,7 +534,7 @@ export default function NewCasePage() {
                 setSubmitError("");
                 setStep((s) => s + 1);
               }}
-              className="flex-1 bg-[#0d1b2a] text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-[#1a2f4a] transition-colors"
+              className="flex-1 bg-[#1a3d54] text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-[#153144] transition-colors"
             >
               Continue
             </button>
@@ -542,7 +542,7 @@ export default function NewCasePage() {
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="flex-1 bg-[#f5a623] text-[#0d1b2a] text-sm font-bold py-2.5 rounded-lg hover:bg-[#e09610] transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex-1 bg-[#e0eaf3] text-[#1a3d54] text-sm font-bold py-2.5 rounded-lg hover:bg-[#d2deea] transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {submitting ? (
                 <>
