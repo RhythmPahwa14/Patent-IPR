@@ -193,8 +193,12 @@ export default function AdminDashboardPage() {
               )}
               {!loading && patentFilings.map((item) => (
                 <tr key={item.id} className="border-b border-gray-50">
-                  <td className="px-5 py-4 text-xs font-semibold text-[#10243a]">{item.referenceNumber || item.id || "-"}</td>
-                  <td className="px-5 py-4 text-sm font-semibold text-[#10243a]">{item.title || "Untitled"}</td>
+                  <td className="px-5 py-4 text-xs font-semibold text-[#10243a]">
+                    <a href={`/admin/filings/${item.id}?type=patent`} className="hover:underline">{item.referenceNumber || item.id || "-"}</a>
+                  </td>
+                  <td className="px-5 py-4 text-sm font-semibold text-[#10243a]">
+                    <a href={`/admin/filings/${item.id}?type=patent`} className="hover:underline">{item.title || "Untitled"}</a>
+                  </td>
                   <td className="px-5 py-4"><StatusBadge status={item.status} /></td>
                   <td className="px-5 py-4 text-xs text-gray-600">
                     {item.assignedAgentName || item.assignedAgentId ? (
@@ -248,7 +252,7 @@ export default function AdminDashboardPage() {
           <table className="w-full text-sm min-w-[1000px]">
             <thead>
               <tr className="border-b border-gray-100">
-                {["Reference", "Type", "Status", "Agent", "Assign Agent", "Update Status", "Submitted"].map((h) => (
+                {["Reference", "Title", "Type", "Status", "Agent", "Assign Agent", "Update Status", "Submitted"].map((h) => (
                   <th key={h} className="text-left text-[10px] font-semibold tracking-widest text-gray-400 uppercase px-5 py-3">{h}</th>
                 ))}
               </tr>
@@ -259,7 +263,12 @@ export default function AdminDashboardPage() {
               )}
               {!loading && nonPatentFilings.map((item) => (
                 <tr key={item.id} className="border-b border-gray-50">
-                  <td className="px-5 py-4 text-xs font-semibold text-[#10243a]">{item.referenceNumber || item.id || "-"}</td>
+                  <td className="px-5 py-4 text-xs font-semibold text-[#10243a]">
+                    <a href={`/admin/filings/${item.id}?type=${item.type?.toLowerCase() || 'non-patent'}`} className="hover:underline">{item.referenceNumber || item.id || "-"}</a>
+                  </td>
+                  <td className="px-5 py-4 text-sm font-semibold text-[#10243a]">
+                    <a href={`/admin/filings/${item.id}?type=${item.type?.toLowerCase() || 'non-patent'}`} className="hover:underline">{item.title || "Untitled"}</a>
+                  </td>
                   <td className="px-5 py-4 text-xs text-gray-600">{item.type || "-"}</td>
                   <td className="px-5 py-4"><StatusBadge status={item.status} /></td>
                   <td className="px-5 py-4 text-xs text-gray-600">{item.assignedAgentName || item.assignedAgentId || <span className="italic text-gray-400">Unassigned</span>}</td>
@@ -289,7 +298,7 @@ export default function AdminDashboardPage() {
                 </tr>
               ))}
               {!loading && nonPatentFilings.length === 0 && (
-                <tr><td colSpan={7} className="px-5 py-10 text-center text-sm text-gray-400">No recent non-patent filings.</td></tr>
+                <tr><td colSpan={8} className="px-5 py-10 text-center text-sm text-gray-400">No recent non-patent filings.</td></tr>
               )}
             </tbody>
           </table>
