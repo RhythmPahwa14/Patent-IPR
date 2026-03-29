@@ -13,8 +13,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "PATENT-IPR | Smart IP Management",
+  title: "Patent-IPR",
   description: "End-to-end Patent, Trademark & IP Filing with real-time case tracking. Join 1,000+ companies managing their intellectual assets globally.",
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default function RootLayout({ children }) {
