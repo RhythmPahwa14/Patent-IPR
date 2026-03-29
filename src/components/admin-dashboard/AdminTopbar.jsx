@@ -96,21 +96,27 @@ export default function AdminTopbar({ searchPlaceholder = "Search filings, agent
             <div className="w-8 h-8 rounded-full bg-[#10243a] flex items-center justify-center text-white text-xs font-bold shrink-0">
               {user.name?.charAt(0) ?? "A"}
             </div>
-          </div>
+          </button>
           
           {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-50">
+            <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-lg shadow-lg py-1 z-50">
               <Link
                 href="/admin/profile"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                 onClick={() => setDropdownOpen(false)}
               >
+                <span className="material-symbols-outlined text-[18px]">person</span>
                 My Profile
               </Link>
               <button
-                onClick={handleLogout}
-                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("user");
+                  router.push("/login");
+                }}
+                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 flex items-center gap-2"
               >
+                <span className="material-symbols-outlined text-[18px]">logout</span>
                 Log Out
               </button>
             </div>

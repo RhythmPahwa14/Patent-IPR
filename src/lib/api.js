@@ -1159,6 +1159,48 @@ export async function updateAdminFilingStatus(filingId = "", status = "", adminN
 // ─── Admin Profile (from localStorage) ────────────────────────────────────────
 export async function getAdminProfile() {
   const stored = getStoredUser();
-  if (stored) return { ok: true, profile: stored, status: 200, data: stored };
-  return { ok: false, profile: null, status: 404, data: { message: "Profile not available." } };
+  if (!stored) return { ok: false, profile: null, status: 404, data: { message: "Profile not available." } };
+
+  const dashRes = await getAdminDashboard();
+  let summary = {
+    totalAgents: 0,
+    totalClients: 0,
+    totalFilings: 0,
+    activeFilings: 0,
+    decidedFilings: 0,
+  };
+
+  if (dashRes.ok) {
+    const s = dashRes.stats;
+    const patentTotal = s?.patentFilings?.total || 0;
+    const npTotal = s?.nonPatentFilings?.total || 0;
+
+    const pByStatus = s?.patentFilings?.byStatus || {};
+    const npByStatus = s?.nonPatentFilings?.byStatus || {};
+
+    const sumStatus = (statusArr) => {
+      let sum = 0;
+      for (const obj of [pByStatus, npByStatus]) {
+        for (const [k, v] of Object.entries(obj)) {
+          if (statusArr.includes(String(k).toUpperCase())) sum += v;
+        }
+      }
+      return sum;
+    };
+
+    summary = {
+      totalAgents: s?.users?.agents || 0,
+      totalClients: s?.users?.clients || 0,
+      totalFilings: patentTotal + npTotal,
+      activeFilings: sumStatus(["PENDING", "IN_REVIEW"]),
+      decidedFilings: sumStatus(["APPROVED", "REJECTED"]),
+    };
+  }
+
+  return { 
+    ok: true, 
+    profile: { ...stored, createdAt: stored.createdAt || new Date().toISOString(), summary }, 
+    status: 200, 
+    data: stored 
+  };
 }
